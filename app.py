@@ -3,6 +3,9 @@ import streamlit as st
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
+if "page" not in st.session_state:
+    st.session_state.page = "nba_player_moves"
+
 @st.cache_data(ttl=3600)
 def fetch_nba_transactions():
     url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/transactions?limit=1000"
@@ -30,7 +33,7 @@ def fetch_nba_transactions():
     return transactions
 
 def render_player_moves():
-    st.title("🔄 Player Moves")
+    st.title("🔄 NBA Player Moves")
     
     transactions = fetch_nba_transactions()
     
@@ -57,15 +60,28 @@ def render_player_moves():
 def main():
     st.sidebar.title("Stan's Sports Stats")
     
-    features = {
-        "🔄 Player Moves": render_player_moves,
-        "📊 Play-by-Play (Coming Soon)": lambda: st.info("🚧 Play-by-play engine coming soon."),
-        "📈 Team Stats (Coming Soon)": lambda: st.info("🚧 Team statistics coming soon.")
-    }
-    
-    selection = st.sidebar.selectbox("🏀 NBA Categories:", list(features.keys()))
-    
-    features[selection]()
+    with st.sidebar.expander("🏀 Basketball", expanded=True):
+        st.markdown("**NBA**")
+        if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
+            st.session_state.page = "nba_standings"
+        if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
+            st.session_state.page = "nba_player_moves"
+        if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
+            st.session_state.page = "nba_player_stats"
+        if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
+            st.session_state.page = "nba_pbp"
+
+    if st.session_state.page == "nba_player_moves":
+        render_player_moves()
+    elif st.session_state.page == "nba_standings":
+        st.title("📊 NBA Standings")
+        st.info("🚧 Standings dashboard coming soon.")
+    elif st.session_state.page == "nba_player_stats":
+        st.title("📈 NBA Player Stats")
+        st.info("🚧 Player statistics engine coming soon.")
+    elif st.session_state.page == "nba_pbp":
+        st.title("⏱️ NBA Matches Play by Play")
+        st.info("🚧 Live play-by-play tracker coming soon.")
 
 if __name__ == "__main__":
     main()
