@@ -161,17 +161,15 @@ def render_wnba_standings():
 def query_huggingface_live(user_input):
     try:
         token = st.secrets["HF_TOKEN"]
-        # Use Meta's Llama-3-8B model on Hugging Face's free serverless infrastructure
         client = InferenceClient("meta-llama/Meta-Llama-3-8B-Instruct", token=token)
         
         system_instruction = (
-            "You are Stan, an enthusiastic basketball analyst and sportscaster. "
-            "You help users understand complex basketball context, salary cap constraints, "
-            "roster rules, trades, and rumors. Keep your tone analytical, sharp, yet conversational "
-            "and deeply knowledgeable about the hoops landscape."
+            "You are Stan, an enthusiastic sports analyst and commentator. "
+            "You help users understand complex sports rules, data trends, trades, and context. "
+            "Keep your tone analytical, sharp, and conversational. CRITICAL: Your response "
+            "MUST be extremely brief and no longer than 50 words total."
         )
         
-        # Format the sliding conversation history
         messages = [{"role": "system", "content": system_instruction}]
         for role, text in st.session_state.chat_history:
             messages.append({"role": "user" if role == "user" else "assistant", "content": text})
@@ -180,7 +178,7 @@ def query_huggingface_live(user_input):
         
         response = client.chat_completion(
             messages=messages,
-            max_tokens=500,
+            max_tokens=100,
             temperature=0.7
         )
         return response.choices[0].message.content
@@ -223,11 +221,28 @@ def main():
             st.rerun()
             
         st.sidebar.divider()
+        
+        # Clean inline SVG flat vector design icon
+        st.sidebar.html(
+            """
+            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 0px 4px #ff9900);">
+                    <circle cx="12" cy="12" r="10" stroke="#ff9900" stroke-width="2"/>
+                    <path d="M12 2C12 2 15 6 15 12C15 18 12 22 12 22" stroke="#ff9900" stroke-width="1.5"/>
+                    <path d="M12 2C12 2 9 6 9 12C9 18 12 22 12 22" stroke="#ff9900" stroke-width="1.5"/>
+                    <path d="M2 12H22" stroke="#ff9900" stroke-width="1.5"/>
+                    <circle cx="12" cy="11" r="2" fill="#ffffff"/>
+                    <path d="M9 16C10 17.5 14 17.5 15 16" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            """
+        )
+        
         st.sidebar.subheader("🤖 Ask Stan")
-        st.sidebar.write("Ask any basketball question. Stan retains context across the thread:")
+        st.sidebar.write("Get insights on trades, statistics, or league contexts instantly:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
-            user_msg = st.text_input("Message Stan...", placeholder="e.g. Break down how a cap moratorium works")
+            user_msg = st.text_input("Message Stan...", placeholder="Type your sports query here...")
             submit_clicked = st.form_submit_button("Send Query", use_container_width=True)
             
         if submit_clicked and user_msg.strip():
