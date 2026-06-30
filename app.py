@@ -7,8 +7,8 @@ if "page" not in st.session_state:
     st.session_state.page = "nba_player_moves"
 
 @st.cache_data(ttl=3600)
-def fetch_nba_transactions():
-    url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/transactions?limit=1000"
+def fetch_transactions(league):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/{league}/transactions?limit=1000"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -32,16 +32,16 @@ def fetch_nba_transactions():
         
     return transactions
 
-def render_player_moves():
-    st.title("🔄 NBA Player Moves")
+def render_moves_page(league, title):
+    st.title(title)
     
-    transactions = fetch_nba_transactions()
+    transactions = fetch_transactions(league)
     
     if not transactions:
         st.error("Hold up. Having trouble pulling data right now.")
         return
 
-    search_query = st.text_input("🔍 Search Teams (e.g., Lakers, Knicks):", "").strip().lower()
+    search_query = st.text_input("🔍 Search Teams:", "").strip().lower()
     st.divider()
 
     results_found = False
@@ -61,7 +61,8 @@ def main():
     st.sidebar.title("Stan's Sports Stats")
     
     with st.sidebar.expander("🏀 Basketball", expanded=True):
-        with st.expander("🇺🇸 NBA", expanded=True):
+        
+        with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
             if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
                 st.session_state.page = "nba_standings"
             if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
@@ -70,18 +71,43 @@ def main():
                 st.session_state.page = "nba_player_stats"
             if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
                 st.session_state.page = "nba_pbp"
+                
+        with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
+            if st.button("📊 Standings", key="wnba_standings_btn", use_container_width=True):
+                st.session_state.page = "wnba_standings"
+            if st.button("🔄 Player Moves", key="wnba_moves_btn", use_container_width=True):
+                st.session_state.page = "wnba_player_moves"
+            if st.button("📈 Player Stats", key="wnba_stats_btn", use_container_width=True):
+                st.session_state.page = "wnba_player_stats"
+            if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
+                st.session_state.page = "wnba_pbp"
 
+    # Navigation Routing Engine
     if st.session_state.page == "nba_player_moves":
-        render_player_moves()
+        render_moves_page("nba", "🔄 NBA Player Moves")
+    elif st.session_state.page == "wnba_player_moves":
+        render_moves_page("wnba", "🔄 WNBA Player Moves")
+        
     elif st.session_state.page == "nba_standings":
         st.title("📊 NBA Standings")
-        st.info("🚧 Standings dashboard coming soon.")
+        st.info("🚧 NBA Standings coming soon.")
+    elif st.session_state.page == "wnba_standings":
+        st.title("📊 WNBA Standings")
+        st.info("🚧 WNBA Standings coming soon.")
+        
     elif st.session_state.page == "nba_player_stats":
         st.title("📈 NBA Player Stats")
-        st.info("🚧 Player statistics engine coming soon.")
+        st.info("🚧 NBA Statistics coming soon.")
+    elif st.session_state.page == "wnba_player_stats":
+        st.title("📈 WNBA Player Stats")
+        st.info("🚧 WNBA Statistics coming soon.")
+        
     elif st.session_state.page == "nba_pbp":
         st.title("⏱️ NBA Matches Play by Play")
-        st.info("🚧 Live play-by-play tracker coming soon.")
+        st.info("🚧 NBA Play-by-Play coming soon.")
+    elif st.session_state.page == "wnba_pbp":
+        st.title("⏱️ WNBA Matches Play by Play")
+        st.info("🚧 WNBA Play-by-Play coming soon.")
 
 if __name__ == "__main__":
     main()
