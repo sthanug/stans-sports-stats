@@ -7,6 +7,8 @@ if "page" not in st.session_state:
     st.session_state.page = "nba_player_moves"
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "ai_mode" not in st.session_state:
+    st.session_state.ai_mode = False
 
 @st.cache_data(ttl=3600)
 def fetch_transactions(league):
@@ -133,6 +135,7 @@ def render_wnba_standings():
                     <div style="font-size: 14px; color: #aaa;">#6 Wings</div>
                 </div>
             </div>
+
             <div style="display: flex; flex-direction: column; gap: 75px; width: 28%;">
                 <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
                     <div style="font-size: 11px; color: #888;">SEMIFINALS 1</div>
@@ -145,6 +148,7 @@ def render_wnba_standings():
                     <div style="font-size: 14px; color: #666; font-style: italic;">Winner M4</div>
                 </div>
             </div>
+
             <div style="display: flex; flex-direction: column; width: 28%; align-items: center;">
                 <div style="background: #333; padding: 12px; border-radius: 6px; border: 1px solid #ff9900; width: 100%; text-align: center;">
                     <div style="font-size: 12px; color: #ff9900; font-weight: bold; letter-spacing: 1px;">WNBA FINALS</div>
@@ -158,7 +162,7 @@ def render_wnba_standings():
 def simulate_stan_response(prompt):
     p = prompt.lower()
     if "giannis" in p:
-        return "Ah, the Giannis trade block buster! Legally, it's a pending agreement until the July moratorium ends. Once the NBA fiscal year officially rolls over, the paperwork goes through league approval and it hits the tracker feed!"
+        return "Ah, the Giannis trade blockbuster! Legally, it's a pending agreement until the July moratorium ends. Once the NBA fiscal year officially rolls over, the paperwork goes through league approval and it hits the tracker feed!"
     if "veteran extension" in p or "exception" in p or "cap" in p:
         return "Roster contracts use salary cap exceptions. A veteran extension allows a team to re-sign their current player over the standard salary cap ceiling based on their accrued years in the league."
     if "two-way" in p:
@@ -168,41 +172,56 @@ def simulate_stan_response(prompt):
 def main():
     st.sidebar.title("Stan's Sports Stats")
     
-    with st.sidebar.expander("🏀 Basketball", expanded=True):
-        with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
-            if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
-                st.session_state.page = "nba_standings"
-            if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
-                st.session_state.page = "nba_player_moves"
-            if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
-                st.session_state.page = "nba_player_stats"
-            if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
-                st.session_state.page = "nba_pbp"
-                
-        with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
-            if st.button("📊 Standings", key="wnba_standings_btn", use_container_width=True):
-                st.session_state.page = "wnba_standings"
-            if st.button("🔄 Player Moves", key="wnba_moves_btn", use_container_width=True):
-                st.session_state.page = "wnba_player_moves"
-            if st.button("📈 Player Stats", key="wnba_stats_btn", use_container_width=True):
-                st.session_state.page = "wnba_player_stats"
-            if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
-                st.session_state.page = "wnba_pbp"
+    # Check if the user is currently in AI mode or standard navigation mode
+    if not st.session_state.ai_mode:
+        if st.sidebar.button("🤖 Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
+            st.session_state.ai_mode = True
+            st.rerun()
+            
+        st.sidebar.divider()
+        
+        with st.sidebar.expander("🏀 Basketball", expanded=True):
+            with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
+                if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
+                    st.session_state.page = "nba_standings"
+                if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
+                    st.session_state.page = "nba_player_moves"
+                if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
+                    st.session_state.page = "nba_player_stats"
+                if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
+                    st.session_state.page = "nba_pbp"
+                    
+            with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
+                if st.button("📊 Standings", key="wnba_standings_btn", use_container_width=True):
+                    st.session_state.page = "wnba_standings"
+                if st.button("🔄 Player Moves", key="wnba_moves_btn", use_container_width=True):
+                    st.session_state.page = "wnba_player_moves"
+                if st.button("📈 Player Stats", key="wnba_stats_btn", use_container_width=True):
+                    st.session_state.page = "wnba_player_stats"
+                if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
+                    st.session_state.page = "wnba_pbp"
+    else:
+        # Override the sidebar with the AI view
+        if st.sidebar.button("⬅️ Back to Sports Navigation", key="exit_ai_btn", use_container_width=True):
+            st.session_state.ai_mode = False
+            st.rerun()
+            
+        st.sidebar.divider()
+        st.sidebar.subheader("🤖 Ask Stan")
+        st.sidebar.write("Type your question about league rules, trades, or player context below:")
+        
+        user_msg = st.sidebar.text_input("Message Stan...", key="chat_input", label_visibility="collapsed")
+        if st.sidebar.button("Send Query", use_container_width=True) and user_msg.strip():
+            reply = simulate_stan_response(user_msg)
+            st.session_state.chat_history.append((user_msg, reply))
 
-    st.sidebar.divider()
-    st.sidebar.subheader("🤖 Ask Stan")
-    
-    user_msg = st.sidebar.text_input("Ask about rules, trades, or context:", key="chat_input", label_visibility="collapsed")
-    if st.sidebar.button("Send", use_container_width=True) and user_msg.strip():
-        reply = simulate_stan_response(user_msg)
-        st.session_state.chat_history.append((user_msg, reply))
-
-    if st.session_state.chat_history:
-        with st.sidebar.container():
-            for u, s in reversed(st.session_state.chat_history[-3:]):
-                st.markdown(f"**You:** {u}")
-                st.markdown(f"**Stan:** {s}")
-                st.sidebar.divider()
+        if st.session_state.chat_history:
+            st.sidebar.divider()
+            with st.sidebar.container():
+                for u, s in reversed(st.session_state.chat_history[-5:]):
+                    st.markdown(f"🙋‍♂️ **You:** {u}")
+                    st.markdown(f"🤖 **Stan:** {s}")
+                    st.sidebar.divider()
 
     # Routing
     if st.session_state.page == "nba_player_moves":
