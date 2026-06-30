@@ -57,7 +57,6 @@ def render_wnba_standings():
     st.title("📊 WNBA Leaderboard")
     st.divider()
     
-    # 15 active teams structured by real league win standings data
     teams = [
         {"rank": 1, "team": "Minnesota Lynx", "record": "15-4", "pct": ".789", "gb": "—"},
         {"rank": 2, "team": "Las Vegas Aces", "record": "14-5", "pct": ".737", "gb": "1.0"},
@@ -76,43 +75,78 @@ def render_wnba_standings():
         {"rank": 15, "team": "Connecticut Sun", "record": "4-15", "pct": ".211", "gb": "11.0"}
     ]
     
-    # Custom Non-Table Grid Layout
-    for t in teams:
-        col1, col2, col3, col4, col5 = st.columns([1, 4, 2, 2, 2])
-        with col1:
-            st.write(f"**#{t['rank']}**")
-        with col2:
-            st.write(f"**{t['team']}**")
-        with col3:
-            st.text(f"Record: {t['record']}")
-        with col4:
-            st.text(f"Pct: {t['pct']}")
-        with col5:
-            st.text(f"GB: {t['gb']}")
-        st.divider()
+    # Render teams 3-at-a-time horizontally to minimize scrolling
+    for i in range(0, len(teams), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            if i + j < len(teams):
+                t = teams[i + j]
+                with cols[j]:
+                    st.markdown(f"**#{t['rank']} {t['team']}**")
+                    st.caption(f"Record: {t['record']} | Pct: {t['pct']} | GB: {t['gb']}")
+        st.write("")
         
+    st.divider()
     st.subheader("🏆 Postseason Bracket")
     
-    # Secure, bulletproof container formatting to gray/blur out postseason section
+    # Visual, CSS-based multi-column tournament bracket
     st.html(
         """
         <div style="
-            filter: grayscale(100%) blur(2px); 
+            filter: grayscale(100%) blur(1.5px); 
             opacity: 0.4; 
             pointer-events: none; 
             border: 1px solid #444; 
-            padding: 25px; 
+            padding: 20px; 
             border-radius: 8px;
             background-color: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: sans-serif;
         ">
-            <h3 style="margin-top:0; color:#888;">🔒 WNBA Playoffs (Locked until September)</h3>
-            <p style="margin-bottom:5px;"><strong>Quarterfinals Matchups Projection:</strong></p>
-            <ul style="margin-top:5px; padding-left:20px; color:#aaa;">
-                <li>Seed #1 vs. Seed #8</li>
-                <li>Seed #2 vs. Seed #7</li>
-                <li>Seed #3 vs. Seed #6</li>
-                <li>Seed #4 vs. Seed #5</li>
-            </ul>
+            <div style="display: flex; flex-direction: column; gap: 20px; width: 28%;">
+                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
+                    <div style="font-size: 11px; color: #888;">MATCHUP 1</div>
+                    <div style="font-size: 14px; color: #fff;">#1 Lynx</div>
+                    <div style="font-size: 14px; color: #aaa;">#8 Mystics</div>
+                </div>
+                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
+                    <div style="font-size: 11px; color: #888;">MATCHUP 2</div>
+                    <div style="font-size: 14px; color: #fff;">#4 Dream</div>
+                    <div style="font-size: 14px; color: #aaa;">#5 Liberty</div>
+                </div>
+                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
+                    <div style="font-size: 11px; color: #888;">MATCHUP 3</div>
+                    <div style="font-size: 14px; color: #fff;">#2 Aces</div>
+                    <div style="font-size: 14px; color: #aaa;">#7 Fever</div>
+                </div>
+                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
+                    <div style="font-size: 11px; color: #888;">MATCHUP 4</div>
+                    <div style="font-size: 14px; color: #fff;">#3 Valkyries</div>
+                    <div style="font-size: 14px; color: #aaa;">#6 Wings</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 75px; width: 28%;">
+                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
+                    <div style="font-size: 11px; color: #888;">SEMIFINALS 1</div>
+                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M1</div>
+                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M2</div>
+                </div>
+                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
+                    <div style="font-size: 11px; color: #888;">SEMIFINALS 2</div>
+                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M3</div>
+                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M4</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; width: 28%; align-items: center;">
+                <div style="background: #333; padding: 12px; border-radius: 6px; border: 1px solid #ff9900; width: 100%; text-align: center;">
+                    <div style="font-size: 12px; color: #ff9900; font-weight: bold; letter-spacing: 1px;">WNBA FINALS</div>
+                    <div style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">TBD vs TBD</div>
+                </div>
+            </div>
         </div>
         """
     )
