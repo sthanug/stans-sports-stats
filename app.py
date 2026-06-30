@@ -29,8 +29,8 @@ def fetch_nba_transactions():
         
     return transactions
 
-def render_nba_page():
-    st.title("🏀 NBA Hub")
+def render_player_moves():
+    st.title("🔄 Player Moves")
     
     transactions = fetch_nba_transactions()
     
@@ -57,15 +57,15 @@ def render_nba_page():
 def main():
     st.sidebar.title("Stan's Sports Stats")
     
-    pages = {
-        "🏀 NBA Basketball": render_nba_page,
-        "🏈 NFL Football": lambda: st.info("🚧 Page coming soon."),
-        "⚾ MLB Baseball": lambda: st.info("🚧 Page coming soon.")
+    features = {
+        "🔄 Player Moves": render_player_moves,
+        "📊 Play-by-Play (Coming Soon)": lambda: st.info("🚧 Play-by-play engine coming soon."),
+        "📈 Team Stats (Coming Soon)": lambda: st.info("🚧 Team statistics coming soon.")
     }
     
-    selection = st.sidebar.selectbox("Select a Sport:", list(pages.keys()))
+    selection = st.sidebar.selectbox("🏀 NBA Categories:", list(features.keys()))
     
-    pages[selection]()
+    features[selection]()
 
 if __name__ == "__main__":
     main()
