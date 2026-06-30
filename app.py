@@ -5,7 +5,7 @@ st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="w
 
 @st.cache_data(ttl=3600)
 def fetch_nba_transactions():
-    url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/transactions"
+    url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/transactions?limit=500"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
