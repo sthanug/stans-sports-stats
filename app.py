@@ -1,14 +1,15 @@
 import requests
 import streamlit as st
+from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
 if "page" not in st.session_state:
     st.session_state.page = "nba_player_moves"
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
 if "ai_mode" not in st.session_state:
     st.session_state.ai_mode = False
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 @st.cache_data(ttl=3600)
 def fetch_transactions(league):
@@ -135,7 +136,6 @@ def render_wnba_standings():
                     <div style="font-size: 14px; color: #aaa;">#6 Wings</div>
                 </div>
             </div>
-
             <div style="display: flex; flex-direction: column; gap: 75px; width: 28%;">
                 <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
                     <div style="font-size: 11px; color: #888;">SEMIFINALS 1</div>
@@ -148,7 +148,6 @@ def render_wnba_standings():
                     <div style="font-size: 14px; color: #666; font-style: italic;">Winner M4</div>
                 </div>
             </div>
-
             <div style="display: flex; flex-direction: column; width: 28%; align-items: center;">
                 <div style="background: #333; padding: 12px; border-radius: 6px; border: 1px solid #ff9900; width: 100%; text-align: center;">
                     <div style="font-size: 12px; color: #ff9900; font-weight: bold; letter-spacing: 1px;">WNBA FINALS</div>
@@ -159,20 +158,38 @@ def render_wnba_standings():
         """
     )
 
-def simulate_stan_response(prompt):
-    p = prompt.lower()
-    if "giannis" in p:
-        return "Ah, the Giannis trade blockbuster! Legally, it's a pending agreement until the July moratorium ends. Once the NBA fiscal year officially rolls over, the paperwork goes through league approval and it hits the tracker feed!"
-    if "veteran extension" in p or "exception" in p or "cap" in p:
-        return "Roster contracts use salary cap exceptions. A veteran extension allows a team to re-sign their current player over the standard salary cap ceiling based on their accrued years in the league."
-    if "two-way" in p:
-        return "Two-way contracts let players bounce between the NBA main roster and the G-League development affiliate. Teams use them to develop young assets without wasting official main roster spots."
-    return f"I'm keeping tabs on that! As the season plays out, I'll analyze roster metrics, trade contexts, and team performance breakdowns right here."
+def query_huggingface_live(user_input):
+    try:
+        token = st.secrets["HF_TOKEN"]
+        # Use Meta's Llama-3-8B model on Hugging Face's free serverless infrastructure
+        client = InferenceClient("meta-llama/Meta-Llama-3-8B-Instruct", token=token)
+        
+        system_instruction = (
+            "You are Stan, an enthusiastic basketball analyst and sportscaster. "
+            "You help users understand complex basketball context, salary cap constraints, "
+            "roster rules, trades, and rumors. Keep your tone analytical, sharp, yet conversational "
+            "and deeply knowledgeable about the hoops landscape."
+        )
+        
+        # Format the sliding conversation history
+        messages = [{"role": "system", "content": system_instruction}]
+        for role, text in st.session_state.chat_history:
+            messages.append({"role": "user" if role == "user" else "assistant", "content": text})
+        
+        messages.append({"role": "user", "content": user_input})
+        
+        response = client.chat_completion(
+            messages=messages,
+            max_tokens=500,
+            temperature=0.7
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Stan is adjusting his microphone. Make sure HF_TOKEN is configured in secrets. (Error: {str(e)})"
 
 def main():
     st.sidebar.title("Stan's Sports Stats")
     
-    # Check if the user is currently in AI mode or standard navigation mode
     if not st.session_state.ai_mode:
         if st.sidebar.button("🤖 Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
@@ -201,26 +218,31 @@ def main():
                 if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
                     st.session_state.page = "wnba_pbp"
     else:
-        # Override the sidebar with the AI view
         if st.sidebar.button("⬅️ Back to Sports Navigation", key="exit_ai_btn", use_container_width=True):
             st.session_state.ai_mode = False
             st.rerun()
             
         st.sidebar.divider()
         st.sidebar.subheader("🤖 Ask Stan")
-        st.sidebar.write("Type your question about league rules, trades, or player context below:")
+        st.sidebar.write("Ask any basketball question. Stan retains context across the thread:")
         
-        user_msg = st.sidebar.text_input("Message Stan...", key="chat_input", label_visibility="collapsed")
-        if st.sidebar.button("Send Query", use_container_width=True) and user_msg.strip():
-            reply = simulate_stan_response(user_msg)
-            st.session_state.chat_history.append((user_msg, reply))
+        with st.sidebar.form(key="chat_form", clear_on_submit=True):
+            user_msg = st.text_input("Message Stan...", placeholder="e.g. Break down how a cap moratorium works")
+            submit_clicked = st.form_submit_button("Send Query", use_container_width=True)
+            
+        if submit_clicked and user_msg.strip():
+            ai_reply = query_huggingface_live(user_msg)
+            st.session_state.chat_history.append(("user", user_msg))
+            st.session_state.chat_history.append(("model", ai_reply))
 
         if st.session_state.chat_history:
             st.sidebar.divider()
             with st.sidebar.container():
-                for u, s in reversed(st.session_state.chat_history[-5:]):
-                    st.markdown(f"🙋‍♂️ **You:** {u}")
-                    st.markdown(f"🤖 **Stan:** {s}")
+                for role, text in st.session_state.chat_history[-8:]:
+                    if role == "user":
+                        st.markdown(f"🙋‍♂️ **You:** {text}")
+                    else:
+                        st.markdown(f"🤖 **Stan:** {text}")
                     st.sidebar.divider()
 
     # Routing
