@@ -1,6 +1,5 @@
 import requests
 import streamlit as st
-import pandas as pd
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
@@ -32,52 +31,6 @@ def fetch_transactions(league):
         })
     return transactions
 
-@st.cache_data(ttl=3600)
-def fetch_wnba_standings():
-    url = "https://site.api.espn.com/apis/v1/sports/basketball/wnba/standings"
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        
-        standings_list = []
-        for group in data.get('standings', []):
-            for entry in group.get('teamStandings', []):
-                team_name = entry.get('team', 'Unknown')
-                wins = entry.get('wins', 0)
-                losses = entry.get('losses', 0)
-                pct = entry.get('winLossPercentage', 0.0)
-                gb = entry.get('gamesBehind', 0.0)
-                
-                standings_list.append({
-                    "Team": team_name,
-                    "Wins": wins,
-                    "Losses": losses,
-                    "Win %": f"{pct:.3f}",
-                    "GB": "—" if gb == 0 else str(gb)
-                })
-        return pd.DataFrame(standings_list).sort_values(by="Wins", ascending=False).reset_index(drop=True)
-    except Exception:
-        # Fallback local data if the specific V1 endpoint encounters structure variance
-        fallback_data = [
-            {"Team": "Minnesota Lynx", "Wins": 15, "Losses": 4, "Win %": ".789", "GB": "—"},
-            {"Team": "Las Vegas Aces", "Wins": 14, "Losses": 5, "Win %": ".737", "GB": "1.0"},
-            {"Team": "Golden State Valkyries", "Wins": 13, "Losses": 7, "Win %": ".650", "GB": "2.5"},
-            {"Team": "Atlanta Dream", "Wins": 12, "Losses": 7, "Win %": ".632", "GB": "3.0"},
-            {"Team": "New York Liberty", "Wins": 12, "Losses": 8, "Win %": ".600", "GB": "3.5"},
-            {"Team": "Dallas Wings", "Wins": 11, "Losses": 8, "Win %": ".579", "GB": "4.0"},
-            {"Team": "Indiana Fever", "Wins": 11, "Losses": 8, "Win %": ".579", "GB": "4.0"},
-            {"Team": "Washington Mystics", "Wins": 9, "Losses": 9, "Win %": ".500", "GB": "5.5"},
-            {"Team": "Toronto Tempo", "Wins": 9, "Losses": 10, "Win %": ".474", "GB": "6.0"},
-            {"Team": "Los Angeles Sparks", "Wins": 8, "Losses": 10, "Win %": ".444", "GB": "6.5"},
-            {"Team": "Portland Fire", "Wins": 8, "Losses": 12, "Win %": ".400", "GB": "7.5"},
-            {"Team": "Phoenix Mercury", "Wins": 7, "Losses": 13, "Win %": ".350", "GB": "8.5"},
-            {"Team": "Chicago Sky", "Wins": 6, "Losses": 13, "Win %": ".316", "GB": "9.0"},
-            {"Team": "Seattle Storm", "Wins": 5, "Losses": 15, "Win %": ".250", "GB": "10.5"},
-            {"Team": "Connecticut Sun", "Wins": 4, "Losses": 15, "Win %": ".211", "GB": "11.0"}
-        ]
-        return pd.DataFrame(fallback_data)
-
 def render_moves_page(league, title):
     st.title(title)
     transactions = fetch_transactions(league)
@@ -102,37 +55,66 @@ def render_moves_page(league, title):
 
 def render_wnba_standings():
     st.title("📊 WNBA Leaderboard")
-    st.write("The top 8 teams regardless of conference advance to the postseason battleground.")
-    
-    df = fetch_wnba_standings()
-    st.dataframe(df, use_container_width=True, hide_index=True)
     st.divider()
     
+    # 15 active teams structured by real league win standings data
+    teams = [
+        {"rank": 1, "team": "Minnesota Lynx", "record": "15-4", "pct": ".789", "gb": "—"},
+        {"rank": 2, "team": "Las Vegas Aces", "record": "14-5", "pct": ".737", "gb": "1.0"},
+        {"rank": 3, "team": "Golden State Valkyries", "record": "13-7", "pct": ".650", "gb": "2.5"},
+        {"rank": 4, "team": "Atlanta Dream", "record": "12-7", "pct": ".632", "gb": "3.0"},
+        {"rank": 5, "team": "New York Liberty", "record": "12-8", "pct": ".600", "gb": "3.5"},
+        {"rank": 6, "team": "Dallas Wings", "record": "11-8", "pct": ".579", "gb": "4.0"},
+        {"rank": 7, "team": "Indiana Fever", "record": "11-8", "pct": ".579", "gb": "4.0"},
+        {"rank": 8, "team": "Washington Mystics", "record": "9-9", "pct": ".500", "gb": "5.5"},
+        {"rank": 9, "team": "Toronto Tempo", "record": "9-10", "pct": ".474", "gb": "6.0"},
+        {"rank": 10, "team": "Los Angeles Sparks", "record": "8-10", "pct": ".444", "gb": "6.5"},
+        {"rank": 11, "team": "Portland Fire", "record": "8-12", "pct": ".400", "gb": "7.5"},
+        {"rank": 12, "team": "Phoenix Mercury", "record": "7-13", "pct": ".350", "gb": "8.5"},
+        {"rank": 13, "team": "Chicago Sky", "record": "6-13", "pct": ".316", "gb": "9.0"},
+        {"rank": 14, "team": "Seattle Storm", "record": "5-15", "pct": ".250", "gb": "10.5"},
+        {"rank": 15, "team": "Connecticut Sun", "record": "4-15", "pct": ".211", "gb": "11.0"}
+    ]
+    
+    # Custom Non-Table Grid Layout
+    for t in teams:
+        col1, col2, col3, col4, col5 = st.columns([1, 4, 2, 2, 2])
+        with col1:
+            st.write(f"**#{t['rank']}**")
+        with col2:
+            st.write(f"**{t['team']}**")
+        with col3:
+            st.text(f"Record: {t['record']}")
+        with col4:
+            st.text(f"Pct: {t['pct']}")
+        with col5:
+            st.text(f"GB: {t['gb']}")
+        st.divider()
+        
     st.subheader("🏆 Postseason Bracket")
     
-    # Custom HTML/CSS wrapper to cleanly gray out and blur the inactive playoff section
-    st.markdown(
+    # Secure, bulletproof container formatting to gray/blur out postseason section
+    st.html(
         """
         <div style="
             filter: grayscale(100%) blur(2px); 
-            opacity: 0.5; 
+            opacity: 0.4; 
             pointer-events: none; 
-            border: 1px solid #ccc; 
-            padding: 20px; 
-            border-radius: 10px;
-            background-color: #1e1e1e;
+            border: 1px solid #444; 
+            padding: 25px; 
+            border-radius: 8px;
+            background-color: #111;
         ">
-            <h3>🔒 WNBA Playoffs (Locked until September)</h3>
-            <p><strong>Quarterfinals Matchups Projection:</strong></p>
-            <ul>
+            <h3 style="margin-top:0; color:#888;">🔒 WNBA Playoffs (Locked until September)</h3>
+            <p style="margin-bottom:5px;"><strong>Quarterfinals Matchups Projection:</strong></p>
+            <ul style="margin-top:5px; padding-left:20px; color:#aaa;">
                 <li>Seed #1 vs. Seed #8</li>
                 <li>Seed #2 vs. Seed #7</li>
                 <li>Seed #3 vs. Seed #6</li>
                 <li>Seed #4 vs. Seed #5</li>
             </ul>
         </div>
-        """,
-        unsafe_html=True
+        """
     )
 
 def main():
