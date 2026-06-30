@@ -75,21 +75,20 @@ def render_wnba_standings():
         {"rank": 15, "team": "Connecticut Sun", "record": "4-15", "pct": ".211", "gb": "11.0"}
     ]
     
-    # Render teams 3-at-a-time horizontally to minimize scrolling
-    for i in range(0, len(teams), 3):
-        cols = st.columns(3)
-        for j in range(3):
-            if i + j < len(teams):
-                t = teams[i + j]
-                with cols[j]:
-                    st.markdown(f"**#{t['rank']} {t['team']}**")
-                    st.caption(f"Record: {t['record']} | Pct: {t['pct']} | GB: {t['gb']}")
-        st.write("")
+    # Ultra-compact horizontal alignment inside single vertical rows
+    for t in teams:
+        col1, col2, col3 = st.columns([1, 4, 7])
+        with col1:
+            st.markdown(f"**#{t['rank']}**")
+        with col2:
+            st.markdown(f"**{t['team']}**")
+        with col3:
+            st.markdown(f"`{t['record']}` | Pct: `{t['pct']}` | GB: `{t['gb']}`")
+        st.write("<div style='margin:-5px 0;'></div>", unsafe_html=True)
+        st.divider()
         
-    st.divider()
     st.subheader("🏆 Postseason Bracket")
     
-    # Visual, CSS-based multi-column tournament bracket
     st.html(
         """
         <div style="
@@ -130,7 +129,7 @@ def render_wnba_standings():
 
             <div style="display: flex; flex-direction: column; gap: 75px; width: 28%;">
                 <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">SEMIFINALS 1</div>
+                    <div style="font-size: 11px; color: #888;">SEMFINALS 1</div>
                     <div style="font-size: 14px; color: #666; font-style: italic;">Winner M1</div>
                     <div style="font-size: 14px; color: #666; font-style: italic;">Winner M2</div>
                 </div>
