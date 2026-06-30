@@ -61,15 +61,15 @@ def main():
     st.sidebar.title("Stan's Sports Stats")
     
     with st.sidebar.expander("🏀 Basketball", expanded=True):
-        st.markdown("**NBA**")
-        if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
-            st.session_state.page = "nba_standings"
-        if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
-            st.session_state.page = "nba_player_moves"
-        if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
-            st.session_state.page = "nba_player_stats"
-        if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
-            st.session_state.page = "nba_pbp"
+        with st.expander("🇺🇸 NBA", expanded=True):
+            if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
+                st.session_state.page = "nba_standings"
+            if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
+                st.session_state.page = "nba_player_moves"
+            if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
+                st.session_state.page = "nba_player_stats"
+            if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
+                st.session_state.page = "nba_pbp"
 
     if st.session_state.page == "nba_player_moves":
         render_player_moves()
