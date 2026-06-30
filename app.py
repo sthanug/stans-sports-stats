@@ -5,7 +5,7 @@ st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="w
 
 @st.cache_data(ttl=3600)
 def fetch_nba_transactions():
-    url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/transactions?limit=500"
+    url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/transactions?limit=1000"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -30,12 +30,12 @@ def fetch_nba_transactions():
     return transactions
 
 def render_nba_page():
-    st.title("🏀 NBA Off-Season Tracker")
+    st.title("🏀 NBA Hub")
     
     transactions = fetch_nba_transactions()
     
     if not transactions:
-        st.error("Hold up. Having trouble pulling data from ESPN right now.")
+        st.error("Hold up. Having trouble pulling data right now.")
         return
 
     search_query = st.text_input("🔍 Search Teams (e.g., Lakers, Knicks):", "").strip().lower()
@@ -59,11 +59,11 @@ def main():
     
     pages = {
         "🏀 NBA Basketball": render_nba_page,
-        "🏈 NFL Football": lambda: st.info("🚧 NFL infrastructure coming soon."),
-        "⚾ MLB Baseball": lambda: st.info("🚧 MLB infrastructure coming soon.")
+        "🏈 NFL Football": lambda: st.info("🚧 Page coming soon."),
+        "⚾ MLB Baseball": lambda: st.info("🚧 Page coming soon.")
     }
     
-    selection = st.sidebar.radio("Select a Sport:", list(pages.keys()))
+    selection = st.sidebar.selectbox("Select a Sport:", list(pages.keys()))
     
     pages[selection]()
 
