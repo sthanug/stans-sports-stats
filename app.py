@@ -3,7 +3,8 @@ import requests
 import streamlit as st
 from huggingface_hub import InferenceClient
 
-st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
+# Setting the browser page icon to your custom logo image file
+st.set_page_config(page_title="Stan's Sports Stats", page_icon="s3logo.png", layout="wide")
 
 # Convert the micro-icon asset into a safe inline base64 string
 def load_button_icon(path):
@@ -98,7 +99,7 @@ st.html(
             border-radius: 4px;
         }}
         
-        div.stButton > button[kind="primary"]:hover {{
+        div.stButton > button[kind="primary"] {{
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) !important;
         }}
