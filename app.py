@@ -71,11 +71,15 @@ st.html(
             background-color: #13151a !important;
         }
         
-        /* Disables all native Streamlit hover toolbar behaviors and full-screening on UI images */
-        [data-testid="stImage"] button, [data-testid="stSidebar"] button[title="View fullscreen"] {
+        /* Strict global rules targeting and completely hiding fullscreen button utilities */
+        button[title="View fullscreen"], 
+        [data-testid="stImage"] button, 
+        .stImage button,
+        [data-testid="stSidebar"] button[title="View fullscreen"] {
             display: none !important;
+            visibility: hidden !important;
         }
-        [data-testid="stImage"] img {
+        [data-testid="stImage"] img, .stImage img {
             cursor: default !important;
         }
     </style>
@@ -301,12 +305,33 @@ def query_huggingface_live(user_input):
         return f"Analytical feed connection offline. (Error: {str(e)})"
 
 def main():
-    # Render main branding logo at the very top of the sidebar hierarchy
     st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # Combined row: Shrunk avatar image set inline with the launch text action
-        st.sidebar.image("ministan.png", width=32)
+        # Combined button container: placing ministan inside the execution trigger markup bounds
+        st.sidebar.html(
+            """
+            <style>
+                /* Style injection mapping to nest custom image inline inside primary action wrapper buttons */
+                div.stButton > button[kind="primary"] {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 10px !important;
+                }
+                div.stButton > button[kind="primary"]::before {
+                    content: "";
+                    background-image: url("app/static/ministan.png");
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    width: 20px;
+                    height: 20px;
+                    display: inline-block;
+                }
+            </style>
+            """
+        )
         if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
