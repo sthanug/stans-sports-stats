@@ -241,8 +241,6 @@ st.html(
             visibility: hidden !important;
             opacity: 0 !important;
             pointer-events: none !important;
-            height: 0px !important;
-            width: 0px !important;
         }}
         [data-testid="stImage"] img, .stImage img, [data-testid="stSidebar"] img {{
             cursor: default !important;
@@ -398,6 +396,8 @@ def main():
             with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
                 if st.button("📰 News", key="nba_news_btn", use_container_width=True):
                     st.session_state.page = "nba_news"
+                if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
+                    st.session_state.page = "nba_standings"
                 if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
                     st.session_state.page = "nba_player_moves"
                 if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
@@ -460,8 +460,10 @@ def main():
         render_moves_page("nba", "🔄 NBA Player Moves")
     elif st.session_state.page == "wnba_player_moves":
         render_moves_page("wnba", "🔄 WNBA Player Moves")
+    elif st.session_state.page == "nba_standings":
+        render_under_construction()
     elif st.session_state.page == "wnba_standings":
-        render_standings_page("wnba", "📊 WNBA Leaderboard")
+        render_under_construction()
     elif st.session_state.page in ["nba_news", "wnba_news", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
         render_under_construction()
 
