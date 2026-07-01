@@ -1,6 +1,6 @@
 import base64
 import requests
-import streamlit as st
+import streamlit st
 from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
@@ -16,21 +16,21 @@ def load_button_icon(path):
 icon_b64 = load_button_icon("ministan.png")
 
 st.html(
-    """
+    f"""
     <style>
-        .stApp {
+        .stApp {{
             background: radial-gradient(circle at 50% 10%, #16181d 0%, #0b0c0e 100%) !important;
             color: #f1f3f5 !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+        }}
         
-        [data-testid="stSidebar"] {
+        [data-testid="stSidebar"] {{
             background-color: #0f1013 !important;
             border-right: 1px solid #1a1d24;
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
-        }
+        }}
         
-        .sport-badge {
+        .sport-badge {{
             background: rgba(255, 85, 0, 0.08);
             border: 1px solid rgba(255, 85, 0, 0.4);
             padding: 6px 14px;
@@ -41,9 +41,9 @@ st.html(
             font-size: 13px;
             letter-spacing: 0.5px;
             box-shadow: 0 2px 8px rgba(255, 85, 0, 0.1);
-        }
+        }}
         
-        .table-row {
+        .table-row {{
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -54,16 +54,16 @@ st.html(
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .table-row:hover {
+        }}
+        .table-row:hover {{
             background: linear-gradient(180deg, #171a21 0%, #12141a 100%);
             border-color: rgba(255, 85, 0, 0.3);
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-        }
+        }}
         
-        /* Enforces centering alignment rules across the primary button content elements */
-        div.stButton > button[kind="primary"] {
+        /* Flex alignment specifications to center text and icon cleanly */
+        div.stButton > button[kind="primary"] {{
             background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
             border: none !important;
             color: #ffffff !important;
@@ -72,36 +72,51 @@ st.html(
             letter-spacing: 0.3px;
             box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
             transition: all 0.2s ease !important;
-            display: flex !important;
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
+            gap: 10px !important;
             text-align: center !important;
-        }
-        div.stButton > button[kind="primary"]:hover {
+        }}
+        
+        /* Injecting ministan via CSS directly to avoid text/code block escaping bugs */
+        div.stButton > button[kind="primary"]::before {{
+            content: "";
+            background-image: url("data:image/png;base64,{icon_b64}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            flex-shrink: 0;
+        }}
+        
+        div.stButton > button[kind="primary"]:hover {{
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) !important;
-        }
-        .stButton > button {
+        }}
+        .stButton > button {{
             border-radius: 6px !important;
             border-color: #262930 !important;
             background-color: #13151a !important;
-        }
+        }}
         
-        /* Strict global rules targeting and completely hiding fullscreen mechanics on all structural layout images */
+        /* Strict global rules targeting and completely hiding fullscreen utilities and overlays */
         button[title="View fullscreen"], 
         [data-testid="stImage"] button, 
         .stImage button,
         [data-testid="stSidebar"] button[title="View fullscreen"],
-        [data-testid="stElementToolbar"] {
+        [data-testid="stElementToolbar"] {{
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
             pointer-events: none !important;
-        }
-        [data-testid="stImage"] img, .stImage img, [data-testid="stSidebar"] img {
+        }}
+        [data-testid="stImage"] img, .stImage img, [data-testid="stSidebar"] img {{
             cursor: default !important;
             pointer-events: none !important;
-        }
+        }}
     </style>
     """
 )
@@ -328,14 +343,8 @@ def main():
     st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # Inlines layout components within button labels to force perfect text-centering parameters
-        button_html = f"""
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <img src="data:image/png;base64,{icon_b64}" style="width: 20px; height: 20px; border-radius: 4px; pointer-events: none;">
-            <span>Ask Stan (AI)</span>
-        </div>
-        """
-        if st.sidebar.button(button_html, key="enter_ai_btn", use_container_width=True, type="primary"):
+        # Simple string label processed here—CSS styling applies the base64 design alignment smoothly
+        if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
             
