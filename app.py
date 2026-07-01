@@ -1,25 +1,36 @@
+import base64
 import requests
 import streamlit as st
 from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
+# Safe conversion of the micro-icon asset into an un-fullscreenable base64 inline string
+def load_button_icon(path):
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
+icon_b64 = load_button_icon("ministan.png")
+
 st.html(
-    """
+    f"""
     <style>
-        .stApp {
+        .stApp {{
             background: radial-gradient(circle at 50% 10%, #16181d 0%, #0b0c0e 100%) !important;
             color: #f1f3f5 !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+        }}
         
-        [data-testid="stSidebar"] {
+        [data-testid="stSidebar"] {{
             background-color: #0f1013 !important;
             border-right: 1px solid #1a1d24;
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
-        }
+        }}
         
-        .sport-badge {
+        .sport-badge {{
             background: rgba(255, 85, 0, 0.08);
             border: 1px solid rgba(255, 85, 0, 0.4);
             padding: 6px 14px;
@@ -30,9 +41,9 @@ st.html(
             font-size: 13px;
             letter-spacing: 0.5px;
             box-shadow: 0 2px 8px rgba(255, 85, 0, 0.1);
-        }
+        }}
         
-        .table-row {
+        .table-row {{
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -43,62 +54,66 @@ st.html(
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .table-row:hover {
+        }}
+        .table-row:hover {{
             background: linear-gradient(180deg, #171a21 0%, #12141a 100%);
             border-color: rgba(255, 85, 0, 0.3);
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-        }
+        }}
         
-        /* Custom HTML Button Styling matching original theme */
-        .custom-stan-btn {
-            background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) ;
-            border: none ;
-            color: #ffffff ;
-            border-radius: 6px ;
-            font-weight: 700 ;
+        /* Formats the icon natively directly inside the button container boundaries */
+        div.stButton > button[kind="primary"] {{
+            background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
+            border: none !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            font-weight: 700 !important;
             letter-spacing: 0.3px;
-            box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) ;
-            transition: all 0.2s ease ;
-            display: inline-flex ;
-            align-items: center ;
-            justify-content: center ;
-            gap: 10px ;
-            width: 100%;
-            padding: 10px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .custom-stan-btn:hover {
+            box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+        }}
+        div.stButton > button[kind="primary"]::before {{
+            content: "";
+            background-image: url("data:image/png;base64,{icon_b64}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }}
+        div.stButton > button[kind="primary"]:hover {{
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) ;
-        }
-        
-        .stButton > button {
+            box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) !important;
+        }}
+        .stButton > button {{
             border-radius: 6px !important;
             border-color: #262930 !important;
             background-color: #13151a !important;
-        }
+        }}
         
-        /* Disable native Streamlit image adjustments and overlays globally */
+        /* Strict CSS overrides to strip out interactive layers and fullscreen hover tools */
         button[title="View fullscreen"], 
         [data-testid="stImage"] button, 
         .stImage button,
         [data-testid="stSidebar"] button[title="View fullscreen"],
-        [data-testid="stElementToolbar"] {
+        [data-testid="stElementToolbar"] {{
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
             pointer-events: none !important;
-        }
-        [data-testid="stImage"] img, .stImage img, [data-testid="stSidebar"] img {
+        }}
+        [data-testid="stImage"] img, .stImage img, [data-testid="stSidebar"] img {{
             cursor: default !important;
             pointer-events: none !important;
-        }
+        }}
     </style>
-    """,
-    unsafe_allow_html=True
+    """
 )
 
 if "page" not in st.session_state:
@@ -323,17 +338,7 @@ def main():
     st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # Custom HTML structural execution button bypasses fullscreen constraints
-        st.sidebar.html(
-            """
-            <button class="custom-stan-btn" onclick="window.parent.postMessage({type: 'streamlit:set_component_value', value: true}, '*')">
-                <img src="app/static/ministan.png" style="width:22px; height:22px; border-radius:4px; pointer-events:none;">
-                Ask Stan (AI)
-            </button>
-            """
-        )
-        # Hidden native element to catch click bindings across routing refreshes
-        if st.sidebar.button("Hidden Trigger", key="enter_ai_btn", use_container_width=True):
+        if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
             
@@ -393,7 +398,7 @@ def main():
                     else:
                         st.html(
                             f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
-                            f'<img src="app/static/ministan.png" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
+                            f'<img src="data:image/png;base64,{icon_b64}" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
                             f'<div><strong>Stan:</strong> {text}</div>'
                             f'</div>'
                         )
