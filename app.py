@@ -428,7 +428,7 @@ def main():
         )
         
         st.sidebar.subheader("Ask Stan")
-        st.sidebar.write("Ask Stan about any sports news:")
+        st.sidebar.write("Ask me about any sports news:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
             user_msg = st.text_input("Message Stan...", placeholder="Type here...")
