@@ -110,7 +110,6 @@ def fetch_transactions(league):
 def fetch_live_wnba_standings():
     url = "https://site.api.espn.com/apis/v2/sports/basketball/wnba/standings"
     
-    # Updated verification roster with active expansion alignments
     official_wnba_teams = [
         "Minnesota Lynx", "Las Vegas Aces", "Golden State Valkyries", "Atlanta Dream",
         "New York Liberty", "Dallas Wings", "Indiana Fever", "Washington Mystics",
@@ -136,7 +135,6 @@ def fetch_live_wnba_standings():
                 
                 w_l_record = "0-0"
                 win_pct = 0.0
-                games_behind = "—"
                 
                 for metric in stats_array:
                     metric_type = str(metric.get('type', '')).lower()
@@ -147,15 +145,11 @@ def fetch_live_wnba_standings():
                         w_l_record = metric.get('displayValue', w_l_record)
                     elif metric_type == 'winpercent' or metric_name == 'winpercent' or metric_abbr == 'PCT':
                         win_pct = metric.get('value', win_pct)
-                    elif metric_type == 'gamesbehind' or metric_name == 'gamesbehind' or metric_abbr == 'GB':
-                        gb_val = metric.get('displayValue', '—')
-                        games_behind = "—" if gb_val == "0" or gb_val == "0.0" else str(gb_val)
                 
                 teams_list.append({
                     "team": team_name,
                     "record": w_l_record,
-                    "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct),
-                    "gb": games_behind
+                    "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct)
                 })
         
         teams_list.sort(key=lambda x: float(x['pct']) if x['pct'] != '0.0' else 0.0, reverse=True)
@@ -205,7 +199,6 @@ def render_wnba_standings():
             <div style="display: flex; align-items: center; gap: 24px;">
                 <span class="sport-badge">{t['record']}</span>
                 <span style="color: #888e96; min-width: 80px;">PCT: <strong style="color:#ffffff; font-family: monospace;">{t['pct']}</strong></span>
-                <span style="color: #888e96; min-width: 60px;">GB: <strong style="color:#ffffff; font-family: monospace;">{t['gb']}</strong></span>
             </div>
         </div>
         """
