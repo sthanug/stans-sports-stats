@@ -88,7 +88,6 @@ def fetch_live_standings(league):
                     team_info = entry.get('team', {})
                     team_name = team_info.get('displayName', 'Unknown Team')
                     
-                    # Direct payload extraction: secure the core logo asset URL directly
                     logo_url = ""
                     logos = team_info.get('logos', [])
                     if logos and isinstance(logos, list):
@@ -464,7 +463,7 @@ def main():
                     st.session_state.page = "nba_player_moves"
                 if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
                     st.session_state.page = "nba_player_stats"
-                if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
+                if st.button("⏱️ Matches", key="nba_pbp_btn", use_container_width=True):
                     st.session_state.page = "nba_pbp"
                     
             with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
@@ -476,7 +475,7 @@ def main():
                     st.session_state.page = "wnba_player_moves"
                 if st.button("📈 Player Stats", key="wnba_stats_btn", use_container_width=True):
                     st.session_state.page = "wnba_player_stats"
-                if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
+                if st.button("⏱️ Matches", key="wnba_pbp_btn", use_container_width=True):
                     st.session_state.page = "wnba_pbp"
     else:
         if st.sidebar.button("⬅️ Back to Navigation", key="exit_ai_btn", use_container_width=True):
@@ -524,9 +523,7 @@ def main():
         render_moves_page("wnba", "🔄 WNBA Player Moves")
     elif st.session_state.page == "wnba_standings":
         render_standings_page("wnba", "📊 WNBA Leaderboard")
-    elif st.session_state.page == "nba_standings":
-        render_standings_page("nba", "📊 NBA Leaderboard")
-    elif st.session_state.page in ["nba_news", "wnba_news", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
+    elif st.session_state.page in ["nba_news", "wnba_news", "nba_standings", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
         render_under_construction()
 
 if __name__ == "__main__":
