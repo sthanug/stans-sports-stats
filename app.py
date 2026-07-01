@@ -454,6 +454,8 @@ def main():
             with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
                 if st.button("📰 News", key="nba_news_btn", use_container_width=True):
                     st.session_state.page = "nba_news"
+                if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
+                    st.session_state.page = "nba_standings"
                 if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
                     st.session_state.page = "nba_player_moves"
                 if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
