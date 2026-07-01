@@ -86,37 +86,37 @@ def fetch_live_wnba_standings():
         data = response.json()
         
         teams_list = []
-        # Navigate through the nested children list structure from the live API
         for group in data.get('children', []):
             for entry in group.get('standings', {}).get('entries', []):
                 team_data = entry.get('team', {})
                 team_name = team_data.get('displayName', 'Unknown Team')
                 
-                # Filter check to keep league rows accurate
                 if team_name not in official_wnba_teams:
                     continue
                 
                 stats = entry.get('stats', [])
                 
-                # FIXED LOGIC: Grab summary or item names to map values safely
+                # FIXED DATA PARSING LOOKUPS
                 record_str = "0-0"
-                for s in stats:
-                    if s.get('name') == 'record' or s.get('type') == 'record':
-                        record_str = s.get('displayValue', '0-0')
-                        break
-                
                 pct = 0.0
-                for s in stats:
-                    if 'winpercent' in str(s.get('type')).lower() or 'pct' in str(s.get('name')).lower():
-                        pct = s.get('value', 0.0)
-                        break
-                        
                 gb = "—"
+                
                 for s in stats:
-                    if 'gamesbehind' in str(s.get('type')).lower() or 'behind' in str(s.get('name')).lower():
+                    abbr = str(s.get('abbreviation', '')).upper()
+                    name = str(s.get('name', '')).lower()
+                    
+                    # Target the win-loss record string safely
+                    if abbr in ['W-L', 'REC'] or name == 'record' or 'summary' in name:
+                        record_str = s.get('displayValue', record_str)
+                    
+                    # Target true percentage value
+                    elif abbr == 'PCT' or 'percent' in name:
+                        pct = s.get('value', pct)
+                        
+                    # Target games behind metric profile
+                    elif abbr == 'GB' or 'behind' in name:
                         gb_val = s.get('displayValue', '—')
                         gb = "—" if gb_val == "0" or gb_val == "0.0" else str(gb_val)
-                        break
                 
                 teams_list.append({
                     "team": team_name,
@@ -125,8 +125,8 @@ def fetch_live_wnba_standings():
                     "gb": gb
                 })
         
-        # Sort based on records calculation profiles
-        teams_list.sort(key=lambda x: x['pct'], reverse=True)
+        # Sort sequentially by true win percentage math
+        teams_list.sort(key=lambda x: float(x['pct']) if x['pct'] != '0.0' else 0.0, reverse=True)
         return teams_list
     except Exception:
         return []
@@ -324,38 +324,4 @@ def main():
             user_msg = st.text_input("Message Stan...", placeholder="Type your multi-sport query...")
             submit_clicked = st.form_submit_button("Send Query", use_container_width=True)
             
-        if submit_clicked and user_msg.strip():
-            ai_reply = query_huggingface_live(user_msg)
-            st.session_state.chat_history.append(("user", user_msg))
-            st.session_state.chat_history.append(("model", ai_reply))
-
-        if st.session_state.chat_history:
-            st.sidebar.divider()
-            with st.sidebar.container():
-                for role, text in st.session_state.chat_history[-6:]:
-                    if role == "user":
-                        st.markdown(f"🙋‍♂️ **You:** {text}")
-                    else:
-                        st.markdown(f"🤖 **Stan:** {text}")
-                    st.sidebar.divider()
-
-    # Routing Engine
-    if st.session_state.page == "nba_player_moves":
-        render_moves_page("nba", "🔄 NBA Player Moves")
-    elif st.session_state.page == "wnba_player_moves":
-        render_moves_page("wnba", "🔄 WNBA Player Moves")
-    elif st.session_state.page == "wnba_standings":
-        render_wnba_standings()
-    elif st.session_state.page == "nba_standings":
-        st.info("NBA Standings coming soon.")
-    elif st.session_state.page == "nba_player_stats":
-        st.info("NBA Statistics coming soon.")
-    elif st.session_state.page == "wnba_player_stats":
-        st.info("WNBA Statistics coming soon.")
-    elif st.session_state.page == "nba_pbp":
-        st.info("NBA Play-by-Play coming soon.")
-    elif st.session_state.page == "wnba_pbp":
-        st.info("WNBA Play-by-Play coming soon.")
-
-if __name__ == "__main__":
-    main()
+        if submit_clicked and
