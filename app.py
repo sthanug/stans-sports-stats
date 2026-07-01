@@ -352,6 +352,64 @@ def render_standings_page(league, title):
         """
     leaderboard_html += "</div>"
     st.html(leaderboard_html)
+        
+    st.subheader("🏆 Postseason Bracket")
+    st.html(
+        """
+        <div style="
+            filter: grayscale(0%); 
+            opacity: 0.4; 
+            pointer-events: none; 
+            border: 1px solid #ff5500; 
+            padding: 24px; 
+            border-radius: 8px;
+            background-color: #121316;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: -apple-system, sans-serif;
+        ">
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 28%;">
+                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 1</div>
+                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#1 Seed</div>
+                    <div style="font-size: 13px; color: #888e96;">#8 Seed</div>
+                </div>
+                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 2</div>
+                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#4 Seed</div>
+                    <div style="font-size: 13px; color: #888e96;">#5 Seed</div>
+                </div>
+                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 3</div>
+                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#2 Seed</div>
+                    <div style="font-size: 13px; color: #888e96;">#7 Seed</div>
+                </div>
+                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 4</div>
+                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#3 Seed</div>
+                    <div style="font-size: 13px; color: #888e96;">#6 Seed</div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 68px; width: 28%;">
+                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">SEMIFINALS 1</div>
+                    <div style="font-size: 13px; color: #444; font-style: italic; margin-top: 2px;">TBD</div>
+                </div>
+                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">SEMIFINALS 2</div>
+                    <div style="font-size: 13px; color: #444; font-style: italic; margin-top: 2px;">TBD</div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; width: 28%; align-items: center;">
+                <div style="background: #1c1d22; padding: 16px; border-radius: 6px; border: 1px solid #ff5500; width: 100%; text-align: center;">
+                    <div style="font-size: 11px; color: #ff5500; font-weight: 700; letter-spacing: 1px;">FINALS</div>
+                    <div style="margin-top: 6px; font-size: 13px; color: #444; font-style: italic;">TBD</div>
+                </div>
+            </div>
+        </div>
+        """
+    )
 
 def query_huggingface_live(user_input):
     try:
@@ -396,8 +454,6 @@ def main():
             with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
                 if st.button("📰 News", key="nba_news_btn", use_container_width=True):
                     st.session_state.page = "nba_news"
-                if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
-                    st.session_state.page = "nba_standings"
                 if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
                     st.session_state.page = "nba_player_moves"
                 if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
@@ -460,11 +516,9 @@ def main():
         render_moves_page("nba", "🔄 NBA Player Moves")
     elif st.session_state.page == "wnba_player_moves":
         render_moves_page("wnba", "🔄 WNBA Player Moves")
-    elif st.session_state.page == "nba_standings":
-        render_under_construction()
     elif st.session_state.page == "wnba_standings":
-        render_under_construction()
-    elif st.session_state.page in ["nba_news", "wnba_news", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
+        render_standings_page("wnba", "📊 WNBA Leaderboard")
+    elif st.session_state.page in ["nba_news", "wnba_news", "nba_standings", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
         render_under_construction()
 
 if __name__ == "__main__":
