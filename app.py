@@ -72,34 +72,61 @@ def fetch_transactions(league):
 @st.cache_data(ttl=1800)
 def fetch_live_wnba_standings():
     url = "https://site.api.espn.com/apis/v2/sports/basketball/wnba/standings"
+    
+    official_wnba_teams = [
+        "Minnesota Lynx", "Las Vegas Aces", "Golden State Valkyries", "Atlanta Dream",
+        "New York Liberty", "Dallas Wings", "Indiana Fever", "Washington Mystics",
+        "Toronto Tempo", "Los Angeles Sparks", "Portland Fire", "Phoenix Mercury",
+        "Chicago Sky", "Seattle Storm", "Connecticut Sun"
+    ]
+    
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
         
         teams_list = []
+        # Navigate through the nested children list structure from the live API
         for group in data.get('children', []):
             for entry in group.get('standings', {}).get('entries', []):
                 team_data = entry.get('team', {})
                 team_name = team_data.get('displayName', 'Unknown Team')
                 
+                # Filter check to keep league rows accurate
+                if team_name not in official_wnba_teams:
+                    continue
+                
                 stats = entry.get('stats', [])
-                records = [s for s in stats if s.get('type') == 'overall']
-                record_str = records[0].get('displayValue', '0-0') if records else '0-0'
                 
-                pct_vals = [s for s in stats if s.get('type') == 'winpercent']
-                pct = pct_vals[0].get('value', 0.0) if pct_vals else 0.0
+                # FIXED LOGIC: Grab summary or item names to map values safely
+                record_str = "0-0"
+                for s in stats:
+                    if s.get('name') == 'record' or s.get('type') == 'record':
+                        record_str = s.get('displayValue', '0-0')
+                        break
                 
-                gb_vals = [s for s in stats if s.get('type') == 'gamesbehind']
-                gb = gb_vals[0].get('displayValue', '—') if gb_vals else '—'
+                pct = 0.0
+                for s in stats:
+                    if 'winpercent' in str(s.get('type')).lower() or 'pct' in str(s.get('name')).lower():
+                        pct = s.get('value', 0.0)
+                        break
+                        
+                gb = "—"
+                for s in stats:
+                    if 'gamesbehind' in str(s.get('type')).lower() or 'behind' in str(s.get('name')).lower():
+                        gb_val = s.get('displayValue', '—')
+                        gb = "—" if gb_val == "0" or gb_val == "0.0" else str(gb_val)
+                        break
                 
                 teams_list.append({
                     "team": team_name,
                     "record": record_str,
-                    "pct": f"{pct:.3f}" if pct else ".000",
-                    "gb": "—" if gb == "0" or gb == "0.0" else str(gb)
+                    "pct": f"{pct:.3f}" if isinstance(pct, (int, float)) and pct <= 1 else str(pct),
+                    "gb": gb
                 })
-        teams_list.sort(key=lambda x: float(x['pct']) if x['pct'] else 0.0, reverse=True)
+        
+        # Sort based on records calculation profiles
+        teams_list.sort(key=lambda x: x['pct'], reverse=True)
         return teams_list
     except Exception:
         return []
