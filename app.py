@@ -15,32 +15,81 @@ def load_button_icon(path):
 icon_b64 = load_button_icon("ministan.png")
 
 @st.cache_data(ttl=3600)
-def fetch_team_map(league):
-    url = f"https://site.api.espn.com/apis/v2/sports/basketball/{league}/standings"
-    team_map = {}
+def fetch_transactions(league):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/{league}/transactions?limit=1000"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
+    except Exception:
+        return []
+    
+    transactions = []
+    for item in data.get('transactions', []):
+        date = item.get('date', '')[:10] 
+        desc = item.get('description', 'No details provided.')
+        
+        team_info = item.get('team', {})
+        team_name = "Unknown Team"
+        logo_url = ""
+        
+        if isinstance(team_info, dict):
+            team_name = team_info.get('displayName', 'Unknown Team')
+            logos = team_info.get('logos', [])
+            if logos and isinstance(logos, list):
+                logo_url = logos[0].get('href', '')
+
+        transactions.append({
+            "Date": date,
+            "Team": team_name,
+            "Transaction": desc,
+            "Logo": logo_url
+        })
+    return transactions
+
+@st.cache_data(ttl=1800)
+def fetch_live_standings(league):
+    url = f"https://site.api.espn.com/apis/v2/sports/basketball/{league}/standings"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        teams_list = []
         for conference in data.get('children', []):
             conferences_or_divisions = conference.get('children', [conference])
             for group in conferences_or_divisions:
                 for entry in group.get('standings', {}).get('entries', []):
                     team_info = entry.get('team', {})
-                    name = team_info.get('displayName', '')
-                    short_name = team_info.get('shortDisplayName', '')
-                    abbreviation = team_info.get('abbreviation', '')
+                    team_name = team_info.get('displayName', 'Unknown Team')
                     team_id = team_info.get('id', '')
-                    if team_id:
-                        if name:
-                            team_map[name.lower().strip()] = team_id
-                        if short_name:
-                            team_map[short_name.lower().strip()] = team_id
-                        if abbreviation:
-                            team_map[abbreviation.lower().strip()] = team_id
+                    
+                    stats_array = entry.get('stats', [])
+                    w_l_record = "0-0"
+                    win_pct = 0.0
+                    
+                    for metric in stats_array:
+                        metric_type = str(metric.get('type', '')).lower()
+                        metric_name = str(metric.get('name', '')).lower()
+                        metric_abbr = str(metric.get('abbreviation', '')).upper()
+                        
+                        if metric_type == 'overall' or metric_name == 'overall' or metric_abbr in ['W-L', 'REC']:
+                            w_l_record = metric.get('displayValue', w_l_record)
+                        elif metric_type == 'winpercent' or metric_name == 'winpercent' or metric_abbr == 'PCT':
+                            win_pct = metric.get('value', win_pct)
+                    
+                    teams_list.append({
+                        "id": team_id,
+                        "team": team_name,
+                        "record": w_l_record,
+                        "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct)
+                    })
+        
+        unique_teams = {v['team']: v for v in teams_list}.values()
+        sorted_teams = sorted(unique_teams, key=lambda x: float(x['pct']) if x['pct'] != '0.0' else 0.0, reverse=True)
+        return list(sorted_teams)
     except Exception:
-        pass
-    return team_map
+        return []
 
 st.html(
     f"""
@@ -183,75 +232,6 @@ if "ai_mode" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-@st.cache_data(ttl=3600)
-def fetch_transactions(league):
-    url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/{league}/transactions?limit=1000"
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-    except Exception:
-        return []
-    
-    transactions = []
-    for item in data.get('transactions', []):
-        date = item.get('date', '')[:10] 
-        desc = item.get('description', 'No details provided.')
-        
-        team_info = item.get('team', {})
-        team_name = team_info.get('displayName', 'Unknown Team') if isinstance(team_info, dict) else 'Unknown Team'
-        
-        transactions.append({
-            "Date": date,
-            "Team": team_name,
-            "Transaction": desc
-        })
-    return transactions
-
-@st.cache_data(ttl=1800)
-def fetch_live_standings(league):
-    url = f"https://site.api.espn.com/apis/v2/sports/basketball/{league}/standings"
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        
-        teams_list = []
-        for conference in data.get('children', []):
-            conferences_or_divisions = conference.get('children', [conference])
-            for group in conferences_or_divisions:
-                for entry in group.get('standings', {}).get('entries', []):
-                    team_info = entry.get('team', {})
-                    team_name = team_info.get('displayName', 'Unknown Team')
-                    team_id = team_info.get('id', '')
-                    
-                    stats_array = entry.get('stats', [])
-                    w_l_record = "0-0"
-                    win_pct = 0.0
-                    
-                    for metric in stats_array:
-                        metric_type = str(metric.get('type', '')).lower()
-                        metric_name = str(metric.get('name', '')).lower()
-                        metric_abbr = str(metric.get('abbreviation', '')).upper()
-                        
-                        if metric_type == 'overall' or metric_name == 'overall' or metric_abbr in ['W-L', 'REC']:
-                            w_l_record = metric.get('displayValue', w_l_record)
-                        elif metric_type == 'winpercent' or metric_name == 'winpercent' or metric_abbr == 'PCT':
-                            win_pct = metric.get('value', win_pct)
-                    
-                    teams_list.append({
-                        "id": team_id,
-                        "team": team_name,
-                        "record": w_l_record,
-                        "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct)
-                    })
-        
-        unique_teams = {v['team']: v for v in teams_list}.values()
-        sorted_teams = sorted(unique_teams, key=lambda x: float(x['pct']) if x['pct'] != '0.0' else 0.0, reverse=True)
-        return list(sorted_teams)
-    except Exception:
-        return []
-
 def render_under_construction():
     st.html(
         """
@@ -268,8 +248,6 @@ def render_moves_page(league, title):
         st.error("Roster feed currently unavailable.")
         return
 
-    team_id_map = fetch_team_map(league)
-
     search_query = st.text_input("🔍 Filter by team name:", "").strip().lower()
     st.divider()
 
@@ -278,23 +256,12 @@ def render_moves_page(league, title):
         if search_query in tx['Team'].lower():
             results_found = True
             
-            cleaned_team_name = tx['Team'].lower().strip()
-            matched_id = team_id_map.get(cleaned_team_name)
-            
-            # Fuzzy match fallback logic loop if direct hash match fails
-            if not matched_id:
-                for official_name, uid in team_id_map.items():
-                    if cleaned_team_name in official_name or official_name in cleaned_team_name:
-                        matched_id = uid
-                        break
-            
             with st.container():
-                if matched_id:
-                    logo_url = f"https://a.espncdn.com/i/teamlogos/basketball/nba/500/scoreboard/{matched_id}.png"
+                if tx['Logo']:
                     st.html(
                         f"""
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                            <img src="{logo_url}" style="width: 32px; height: 32px; object-fit: contain;">
+                            <img src="{tx['Logo']}" style="width: 32px; height: 32px; object-fit: contain;">
                             <h3 style="margin: 0; color: #ff5500;">{tx['Team']}</h3>
                         </div>
                         """
