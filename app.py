@@ -3,7 +3,7 @@ import requests
 import streamlit as st
 from huggingface_hub import InferenceClient
 
-# Setting the page config with your new custom favicon asset
+# Setting the page config with your custom favicon asset
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="s3favicon.png", layout="wide")
 
 # Convert the micro-icon asset into a safe inline base64 string
@@ -31,8 +31,8 @@ st.html(
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
         }}
         
-        /* Orange accents and text highlights */
-        h1, h2, h3, strong {{
+        /* Total Orange Theme Override for Headings, Links, Accents, and Info boxes */
+        h1, h2, h3, strong, a {{
             color: #ff5500 !important;
         }}
         
@@ -68,8 +68,8 @@ st.html(
             box-shadow: 0 6px 16px rgba(255, 85, 0, 0.15);
         }}
         
-        /* Turning all primary buttons, standard navigation options, and headers orange */
-        .stButton > button, div.stButton > button[kind="primary"] {{
+        /* Aggressive over-styling to wipe out default blue buttons and expanders */
+        .stButton > button, div.stButton > button[kind="primary"], .stButton > button[kind="secondary"] {{
             background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
             border: 1px solid #ff5500 !important;
             color: #ffffff !important;
@@ -77,14 +77,15 @@ st.html(
             box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
             transition: all 0.2s ease !important;
             width: 100% !important;
-            display: inline-flex !important;
+            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            height: 42px !important;
         }}
         
-        /* Perfect vertical and horizontal centering inside the primary layout tracker button */
-        div.stButton > button[kind="primary"] p, .stButton > button p {{
-            display: inline-flex !important;
+        /* Strict Flex layout on the text holder container inside buttons for flawless centering */
+        div.stButton > button p, .stButton > button div, .stButton > button span {{
+            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 10px !important;
@@ -97,7 +98,7 @@ st.html(
             line-height: 1 !important;
         }}
         
-        /* Shrunk inline custom ministan asset injection overlay */
+        /* Pseudo-element implementation ensures ministan sits inside the centered block */
         div.stButton > button[kind="primary"] p::before {{
             content: "";
             background-image: url("data:image/png;base64,{icon_b64}");
@@ -117,12 +118,23 @@ st.html(
             border-color: #ffffff !important;
         }}
         
+        /* Styling offline alert boxes to match orange palette instead of default blue */
+        div[data-testid="stNotification"] {{
+            background-color: #1a100a !important;
+            border: 1px solid #ff5500 !important;
+            color: #f1f3f5 !important;
+            border-radius: 6px !important;
+        }}
+        div[data-testid="stNotification"] svg {{
+            color: #ff5500 !important;
+        }}
+        
         /* Streamlit divider line color modification */
         hr {{
             border-color: rgba(255, 85, 0, 0.3) !important;
         }}
         
-        /* Global rules targeting and completely hiding fullscreen utilities and overlays */
+        /* Hard-kill any fullscreen utility toggles or toolbar elements overlays on standard image assets */
         button[title="View fullscreen"], 
         [data-testid="stImage"] button, 
         .stImage button,
@@ -223,6 +235,9 @@ def fetch_live_wnba_standings():
         return teams_list
     except Exception:
         return []
+
+def render_under_construction():
+    st.markdown("<h1 style='text-align: center; margin-top: 50px;'>🚧 I'm still working on this page! 🚧</h1>", unsafe_allow_html=True)
 
 def render_moves_page(league, title):
     st.title(title)
@@ -435,16 +450,8 @@ def main():
         render_moves_page("wnba", "🔄 WNBA Player Moves")
     elif st.session_state.page == "wnba_standings":
         render_wnba_standings()
-    elif st.session_state.page == "nba_standings":
-        st.info("NBA Standings database currently offline.")
-    elif st.session_state.page == "nba_player_stats":
-        st.info("NBA Statistics records currently offline.")
-    elif st.session_state.page == "wnba_player_stats":
-        st.info("WNBA Statistics records currently offline.")
-    elif st.session_state.page == "nba_pbp":
-        st.info("NBA Play-by-Play feed currently offline.")
-    elif st.session_state.page == "wnba_pbp":
-        st.info("WNBA Play-by-Play feed currently offline.")
+    elif st.session_state.page in ["nba_standings", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
+        render_under_construction()
 
 if __name__ == "__main__":
     main()
