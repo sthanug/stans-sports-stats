@@ -29,12 +29,15 @@ def fetch_team_map(league):
                     team_info = entry.get('team', {})
                     name = team_info.get('displayName', '')
                     short_name = team_info.get('shortDisplayName', '')
+                    abbreviation = team_info.get('abbreviation', '')
                     team_id = team_info.get('id', '')
                     if team_id:
                         if name:
                             team_map[name.lower().strip()] = team_id
                         if short_name:
                             team_map[short_name.lower().strip()] = team_id
+                        if abbreviation:
+                            team_map[abbreviation.lower().strip()] = team_id
     except Exception:
         pass
     return team_map
@@ -278,6 +281,7 @@ def render_moves_page(league, title):
             cleaned_team_name = tx['Team'].lower().strip()
             matched_id = team_id_map.get(cleaned_team_name)
             
+            # Fuzzy match fallback logic loop if direct hash match fails
             if not matched_id:
                 for official_name, uid in team_id_map.items():
                     if cleaned_team_name in official_name or official_name in cleaned_team_name:
