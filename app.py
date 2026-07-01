@@ -19,15 +19,6 @@ st.html(
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
         }
         
-        /* Custom avatar formatting rules */
-        .stan-avatar-mini {
-            width: 20px;
-            height: 20px;
-            vertical-align: middle;
-            margin-right: 6px;
-            border-radius: 50%;
-        }
-        
         .sport-badge {
             background: rgba(255, 85, 0, 0.08);
             border: 1px solid rgba(255, 85, 0, 0.4);
@@ -80,8 +71,8 @@ st.html(
             background-color: #13151a !important;
         }
         
-        /* Removes Streamlit toolbar/fullscreen mechanics specifically from Stan's avatars */
-        [data-testid="stImage"] button {
+        /* Forces standard native cursor and completely hides toolbar overlays on images */
+        [data-testid="stImage"] button, [data-testid="stSidebar"] button[title="View fullscreen"] {
             display: none !important;
         }
         [data-testid="stImage"] img {
@@ -313,8 +304,15 @@ def main():
     st.sidebar.title("Stan's Sports Stats")
     
     if not st.session_state.ai_mode:
-        # Replaced the robot icon inside the navigation button with a shrunk version of your custom avatar
-        if st.sidebar.button("📷 Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
+        # Replaced navigation entry trigger with markdown layout injecting your mini-avatar directly
+        st.sidebar.markdown(
+            '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">'
+            '<img src="app/static/stan.png" style="width: 24px; height: 24px; border-radius: 4px;">'
+            '<span style="font-weight: 600; font-size: 14px; color: #f1f3f5;">Stan AI Live Module</span>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+        if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
             
@@ -347,14 +345,15 @@ def main():
             
         st.sidebar.divider()
         
-        # Disabled the click-to-expand / hover-toolbar behavior entirely via user_container_width configuration
+        # Displays main asset on sidebar chat panel with interactive controls entirely disabled
         st.sidebar.image(
             "stan.png", 
-            use_container_width=True
+            use_container_width=True,
+            output_format="PNG"
         )
         
-        # Replaced robot icon in the header section with a clean micro text layout
-        st.sidebar.subheader("🏀 Ask Stan")
+        # Header text tracking layout cleanly set
+        st.sidebar.subheader("Ask Stan")
         st.sidebar.write("Ask Stan about any sports news:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
@@ -373,8 +372,13 @@ def main():
                     if role == "user":
                         st.markdown(f"👤 **You:** {text}")
                     else:
-                        # Replaced old little bot in conversation items with an inline custom image pointer tag
-                        st.markdown(f"🏀 **Stan:** {text}")
+                        # Replaced old little bot in chat row loops with your shrunk custom asset pointer
+                        st.html(
+                            f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
+                            f'<img src="app/static/stan.png" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
+                            f'<div><strong>Stan:</strong> {text}</div>'
+                            f'</div>'
+                        )
                     st.sidebar.divider()
 
     if st.session_state.page == "nba_player_moves":
