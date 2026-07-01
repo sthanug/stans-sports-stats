@@ -62,26 +62,43 @@ st.html(
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }}
         
-        /* Native centering rules for the explicit HTML button replacement */
-        .native-stan-btn {{
+        /* Targets the internal text layout component of Streamlit's primary buttons to center text + icon */
+        div.stButton > button[kind="primary"] {{
             background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
             border: none !important;
             color: #ffffff !important;
             border-radius: 6px !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.3px;
             box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
             transition: all 0.2s ease !important;
-            display: flex !important;
+            width: 100% !important;
+        }}
+        
+        div.stButton > button[kind="primary"] p {{
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 10px !important;
             width: 100% !important;
-            padding: 10px 14px !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px !important;
+            text-align: center !important;
         }}
-        .native-stan-btn:hover {{
+        
+        /* Injecting ministan cleanly as an un-fullscreenable inline pseudo-element */
+        div.stButton > button[kind="primary"] p::before {{
+            content: "";
+            background-image: url("data:image/png;base64,{icon_b64}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            flex-shrink: 0;
+            border-radius: 4px;
+        }}
+        
+        div.stButton > button[kind="primary"]:hover {{
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) !important;
         }}
@@ -92,7 +109,7 @@ st.html(
             background-color: #13151a !important;
         }}
         
-        /* Hard-kill any lingering Streamlit image overlays or toolbar elements */
+        /* Hard-kill any fullscreen utility toggles or toolbar elements overlays on standard image assets */
         button[title="View fullscreen"], 
         [data-testid="stImage"] button, 
         .stImage button,
@@ -333,21 +350,8 @@ def main():
     st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # A fully custom native component layout that can never generate full-screen overlays
-        btn_container = st.sidebar.empty()
-        with btn_container:
-            st.html(
-                f"""
-                <div class="native-stan-btn" onclick="window.parent.postMessage({{type: 'streamlit:set_component_value', value: 'launch_ai'}}, '*')">
-                    <img src="data:image/png;base64,{icon_b64}" style="width: 20px; height: 20px; border-radius: 4px; pointer-events: none;">
-                    <span>Ask Stan (AI)</span>
-                </div>
-                """
-            )
-        
-        # A clean invisible state trigger hook to track framework events securely
-        click_check = st.sidebar.toggle("Launch Hook", key="hidden_hook_trigger", label_visibility="collapsed")
-        if click_check:
+        # Standard native primary button execution loop
+        if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
             
