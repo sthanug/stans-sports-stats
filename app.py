@@ -241,6 +241,8 @@ st.html(
             visibility: hidden !important;
             opacity: 0 !important;
             pointer-events: none !important;
+            height: 0px !important;
+            width: 0px !important;
         }}
         [data-testid="stImage"] img, .stImage img, [data-testid="stSidebar"] img {{
             cursor: default !important;
