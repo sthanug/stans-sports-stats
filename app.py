@@ -3,8 +3,8 @@ import requests
 import streamlit as st
 from huggingface_hub import InferenceClient
 
-# Setting the browser page icon to your custom logo image file
-st.set_page_config(page_title="Stan's Sports Stats", page_icon="s3logo.png", layout="wide")
+# Setting the page config with your new custom favicon asset
+st.set_page_config(page_title="Stan's Sports Stats", page_icon="s3favicon.png", layout="wide")
 
 # Convert the micro-icon asset into a safe inline base64 string
 def load_button_icon(path):
@@ -31,9 +31,14 @@ st.html(
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
         }}
         
+        /* Orange accents and text highlights */
+        h1, h2, h3, strong {{
+            color: #ff5500 !important;
+        }}
+        
         .sport-badge {{
-            background: rgba(255, 85, 0, 0.08);
-            border: 1px solid rgba(255, 85, 0, 0.4);
+            background: rgba(255, 85, 0, 0.12);
+            border: 1px solid #ff5500;
             padding: 6px 14px;
             border-radius: 4px;
             color: #ff5500;
@@ -41,7 +46,7 @@ st.html(
             font-weight: 700;
             font-size: 13px;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(255, 85, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(255, 85, 0, 0.2);
         }}
         
         .table-row {{
@@ -58,23 +63,27 @@ st.html(
         }}
         .table-row:hover {{
             background: linear-gradient(180deg, #171a21 0%, #12141a 100%);
-            border-color: rgba(255, 85, 0, 0.3);
+            border-color: #ff5500;
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 6px 16px rgba(255, 85, 0, 0.15);
         }}
         
-        /* Targets the internal text layout component of Streamlit's primary buttons to center text + icon */
-        div.stButton > button[kind="primary"] {{
+        /* Turning all primary buttons, standard navigation options, and headers orange */
+        .stButton > button, div.stButton > button[kind="primary"] {{
             background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
-            border: none !important;
+            border: 1px solid #ff5500 !important;
             color: #ffffff !important;
             border-radius: 6px !important;
             box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
             transition: all 0.2s ease !important;
             width: 100% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }}
         
-        div.stButton > button[kind="primary"] p {{
+        /* Perfect vertical and horizontal centering inside the primary layout tracker button */
+        div.stButton > button[kind="primary"] p, .stButton > button p {{
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -83,9 +92,12 @@ st.html(
             font-weight: 700 !important;
             letter-spacing: 0.3px !important;
             text-align: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1 !important;
         }}
         
-        /* Injecting ministan cleanly as an un-fullscreenable inline pseudo-element */
+        /* Shrunk inline custom ministan asset injection overlay */
         div.stButton > button[kind="primary"] p::before {{
             content: "";
             background-image: url("data:image/png;base64,{icon_b64}");
@@ -99,18 +111,18 @@ st.html(
             border-radius: 4px;
         }}
         
-        div.stButton > button[kind="primary"] {{
+        .stButton > button:hover, div.stButton > button[kind="primary"]:hover {{
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) !important;
+            box-shadow: 0 6px 16px rgba(212, 61, 0, 0.55) !important;
+            border-color: #ffffff !important;
         }}
         
-        .stButton > button {{
-            border-radius: 6px !important;
-            border-color: #262930 !important;
-            background-color: #13151a !important;
+        /* Streamlit divider line color modification */
+        hr {{
+            border-color: rgba(255, 85, 0, 0.3) !important;
         }}
         
-        /* Hard-kill any fullscreen utility toggles or toolbar elements overlays on standard image assets */
+        /* Global rules targeting and completely hiding fullscreen utilities and overlays */
         button[title="View fullscreen"], 
         [data-testid="stImage"] button, 
         .stImage button,
@@ -248,12 +260,12 @@ def render_wnba_standings():
         leaderboard_html += f"""
         <div class="table-row">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span style="width: 24px; color: #53565a; font-weight: 700;">{idx}</span>
+                <span style="width: 24px; color: #ff5500; font-weight: 700;">{idx}</span>
                 <span style="font-weight: 600; color: #ffffff; font-size: 15px;">{t['team']}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 24px;">
                 <span class="sport-badge">{t['record']}</span>
-                <span style="color: #888e96; min-width: 80px;">PCT: <strong style="color:#ffffff; font-family: monospace;">{t['pct']}</strong></span>
+                <span style="color: #888e96; min-width: 80px;">PCT: <strong style="color:#ff5500; font-family: monospace;">{t['pct']}</strong></span>
             </div>
         </div>
         """
@@ -264,10 +276,10 @@ def render_wnba_standings():
     st.html(
         """
         <div style="
-            filter: grayscale(100%); 
-            opacity: 0.2; 
+            filter: grayscale(0%); 
+            opacity: 0.4; 
             pointer-events: none; 
-            border: 1px solid #22252a; 
+            border: 1px solid #ff5500; 
             padding: 24px; 
             border-radius: 8px;
             background-color: #121316;
@@ -278,33 +290,33 @@ def render_wnba_standings():
         ">
             <div style="display: flex; flex-direction: column; gap: 16px; width: 28%;">
                 <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 1</div>
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 1</div>
                     <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#1 Seed</div>
                     <div style="font-size: 13px; color: #888e96;">#8 Seed</div>
                 </div>
                 <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 2</div>
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 2</div>
                     <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#4 Seed</div>
                     <div style="font-size: 13px; color: #888e96;">#5 Seed</div>
                 </div>
                 <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 3</div>
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 3</div>
                     <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#2 Seed</div>
                     <div style="font-size: 13px; color: #888e96;">#7 Seed</div>
                 </div>
                 <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 4</div>
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">MATCHUP 4</div>
                     <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#3 Seed</div>
                     <div style="font-size: 13px; color: #888e96;">#6 Seed</div>
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 68px; width: 28%;">
                 <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">SEMIFINALS 1</div>
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">SEMIFINALS 1</div>
                     <div style="font-size: 13px; color: #444; font-style: italic; margin-top: 2px;">TBD</div>
                 </div>
                 <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">SEMIFINALS 2</div>
+                    <div style="font-size: 10px; color: #ff5500; font-weight: 700;">SEMIFINALS 2</div>
                     <div style="font-size: 13px; color: #444; font-style: italic; margin-top: 2px;">TBD</div>
                 </div>
             </div>
@@ -351,7 +363,6 @@ def main():
     st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # Standard native primary button execution loop
         if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
@@ -413,7 +424,7 @@ def main():
                         st.html(
                             f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
                             f'<img src="data:image/png;base64,{icon_b64}" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
-                            f'<div><strong>Stan:</strong> {text}</div>'
+                            f'<div><strong style="color:#ff5500;">Stan:</strong> {text}</div>'
                             f'</div>'
                         )
                     st.sidebar.divider()
