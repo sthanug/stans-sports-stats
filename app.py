@@ -110,6 +110,7 @@ def fetch_transactions(league):
 def fetch_live_wnba_standings():
     url = "https://site.api.espn.com/apis/v2/sports/basketball/wnba/standings"
     
+    # Updated verification roster with active expansion alignments
     official_wnba_teams = [
         "Minnesota Lynx", "Las Vegas Aces", "Golden State Valkyries", "Atlanta Dream",
         "New York Liberty", "Dallas Wings", "Indiana Fever", "Washington Mystics",
@@ -377,4 +378,7 @@ def main():
     elif st.session_state.page == "nba_pbp":
         st.info("NBA Play-by-Play feed currently offline.")
     elif st.session_state.page == "wnba_pbp":
-        st.info("WNBA Play-by-Play feed currently
+        st.info("WNBA Play-by-Play feed currently offline.")
+
+if __name__ == "__main__":
+    main()
