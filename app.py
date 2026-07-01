@@ -396,6 +396,8 @@ def main():
         
         with st.sidebar.expander("🏀 Basketball", expanded=True):
             with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
+                if st.button("📰 News", key="nba_news_btn", use_container_width=True):
+                    st.session_state.page = "nba_news"
                 if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
                     st.session_state.page = "nba_standings"
                 if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
@@ -406,6 +408,8 @@ def main():
                     st.session_state.page = "nba_pbp"
                     
             with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
+                if st.button("📰 News", key="wnba_news_btn", use_container_width=True):
+                    st.session_state.page = "wnba_news"
                 if st.button("📊 Standings", key="wnba_standings_btn", use_container_width=True):
                     st.session_state.page = "wnba_standings"
                 if st.button("🔄 Player Moves", key="wnba_moves_btn", use_container_width=True):
@@ -428,7 +432,7 @@ def main():
         )
         
         st.sidebar.subheader("Ask Stan")
-        st.sidebar.write("Ask me about any sports news:")
+        st.sidebar.write("Ask Stan about any sports news:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
             user_msg = st.text_input("Message Stan...", placeholder="Type here...")
@@ -460,7 +464,7 @@ def main():
         render_moves_page("wnba", "🔄 WNBA Player Moves")
     elif st.session_state.page == "wnba_standings":
         render_wnba_standings()
-    elif st.session_state.page in ["nba_standings", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
+    elif st.session_state.page in ["nba_news", "wnba_news", "nba_standings", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
         render_under_construction()
 
 if __name__ == "__main__":
