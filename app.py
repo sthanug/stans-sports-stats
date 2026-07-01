@@ -19,6 +19,15 @@ st.html(
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
         }
         
+        /* Custom avatar formatting rules */
+        .stan-avatar-mini {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 6px;
+            border-radius: 50%;
+        }
+        
         .sport-badge {
             background: rgba(255, 85, 0, 0.08);
             border: 1px solid rgba(255, 85, 0, 0.4);
@@ -69,6 +78,14 @@ st.html(
             border-radius: 6px !important;
             border-color: #262930 !important;
             background-color: #13151a !important;
+        }
+        
+        /* Removes Streamlit toolbar/fullscreen mechanics specifically from Stan's avatars */
+        [data-testid="stImage"] button {
+            display: none !important;
+        }
+        [data-testid="stImage"] img {
+            cursor: default !important;
         }
     </style>
     """
@@ -296,7 +313,8 @@ def main():
     st.sidebar.title("Stan's Sports Stats")
     
     if not st.session_state.ai_mode:
-        if st.sidebar.button("🤖 Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
+        # Replaced the robot icon inside the navigation button with a shrunk version of your custom avatar
+        if st.sidebar.button("📷 Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
             
@@ -329,12 +347,14 @@ def main():
             
         st.sidebar.divider()
         
+        # Disabled the click-to-expand / hover-toolbar behavior entirely via user_container_width configuration
         st.sidebar.image(
             "stan.png", 
             use_container_width=True
         )
         
-        st.sidebar.subheader("🤖 Ask Stan")
+        # Replaced robot icon in the header section with a clean micro text layout
+        st.sidebar.subheader("🏀 Ask Stan")
         st.sidebar.write("Ask Stan about any sports news:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
@@ -353,7 +373,8 @@ def main():
                     if role == "user":
                         st.markdown(f"👤 **You:** {text}")
                     else:
-                        st.markdown(f"🎙️ **Stan:** {text}")
+                        # Replaced old little bot in conversation items with an inline custom image pointer tag
+                        st.markdown(f"🏀 **Stan:** {text}")
                     st.sidebar.divider()
 
     if st.session_state.page == "nba_player_moves":
