@@ -68,7 +68,7 @@ st.html(
             box-shadow: 0 6px 16px rgba(255, 85, 0, 0.15);
         }}
         
-        /* Aggressive over-styling to wipe out default blue buttons and expanders */
+        /* Orange styling applied to all sidebar navigation options and headers */
         .stButton > button, div.stButton > button[kind="primary"], .stButton > button[kind="secondary"] {{
             background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
             border: 1px solid #ff5500 !important;
@@ -83,7 +83,7 @@ st.html(
             height: 42px !important;
         }}
         
-        /* Strict Flex layout on the text holder container inside buttons for flawless centering */
+        /* Perfect vertical and horizontal centering inside the primary layout tracker button */
         div.stButton > button p, .stButton > button div, .stButton > button span {{
             display: flex !important;
             align-items: center !important;
@@ -118,15 +118,19 @@ st.html(
             border-color: #ffffff !important;
         }}
         
-        /* Styling offline alert boxes to match orange palette instead of default blue */
-        div[data-testid="stNotification"] {{
-            background-color: #1a100a !important;
+        /* Styled message container customized into an orange block design */
+        .orange-info-message {{
+            background: rgba(255, 85, 0, 0.05) !important;
             border: 1px solid #ff5500 !important;
             color: #f1f3f5 !important;
             border-radius: 6px !important;
-        }}
-        div[data-testid="stNotification"] svg {{
-            color: #ff5500 !important;
+            padding: 16px 20px !important;
+            margin: 20px 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            font-weight: 500 !important;
+            box-shadow: 0 4px 12px rgba(255, 85, 0, 0.05) !important;
         }}
         
         /* Streamlit divider line color modification */
@@ -237,7 +241,13 @@ def fetch_live_wnba_standings():
         return []
 
 def render_under_construction():
-    st.markdown("<h1 style='text-align: center; margin-top: 50px;'>🚧 I'm still working on this page! 🚧</h1>", unsafe_allow_html=True)
+    st.html(
+        """
+        <div class="orange-info-message">
+            <span>🚧 I'm still working on this page! 🚧</span>
+        </div>
+        """
+    )
 
 def render_moves_page(league, title):
     st.title(title)
