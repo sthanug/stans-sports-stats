@@ -71,6 +71,7 @@ st.html(
             background-color: #13151a !important;
         }
         
+        /* Disables all native Streamlit hover toolbar behaviors and full-screening on UI images */
         [data-testid="stImage"] button, [data-testid="stSidebar"] button[title="View fullscreen"] {
             display: none !important;
         }
@@ -300,18 +301,12 @@ def query_huggingface_live(user_input):
         return f"Analytical feed connection offline. (Error: {str(e)})"
 
 def main():
-    # Render the new main logo at the top of the sidebar
+    # Render main branding logo at the very top of the sidebar hierarchy
     st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # Mini-avatar row arrangement
-        st.sidebar.markdown(
-            '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">'
-            '<img src="app/static/stan.png" style="width: 24px; height: 24px; border-radius: 4px;">'
-            '<span style="font-weight: 600; font-size: 14px; color: #f1f3f5;">Ask Stan (AI)</span>'
-            '</div>',
-            unsafe_allow_html=True
-        )
+        # Combined row: Shrunk avatar image set inline with the launch text action
+        st.sidebar.image("ministan.png", width=32)
         if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
             st.session_state.ai_mode = True
             st.rerun()
@@ -372,7 +367,7 @@ def main():
                     else:
                         st.html(
                             f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
-                            f'<img src="app/static/stan.png" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
+                            f'<img src="ministan.png" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
                             f'<div><strong>Stan:</strong> {text}</div>'
                             f'</div>'
                         )
