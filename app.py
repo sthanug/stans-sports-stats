@@ -87,7 +87,12 @@ def fetch_live_standings(league):
                 for entry in group.get('standings', {}).get('entries', []):
                     team_info = entry.get('team', {})
                     team_name = team_info.get('displayName', 'Unknown Team')
-                    team_id = team_info.get('id', '')
+                    
+                    # Direct payload extraction: secure the core logo asset URL directly
+                    logo_url = ""
+                    logos = team_info.get('logos', [])
+                    if logos and isinstance(logos, list):
+                        logo_url = logos[0].get('href', '')
                     
                     stats_array = entry.get('stats', [])
                     w_l_record = "0-0"
@@ -104,7 +109,7 @@ def fetch_live_standings(league):
                             win_pct = metric.get('value', win_pct)
                     
                     teams_list.append({
-                        "id": team_id,
+                        "logo": logo_url,
                         "team": team_name,
                         "record": w_l_record,
                         "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct)
@@ -329,9 +334,8 @@ def render_standings_page(league, title):
         
     leaderboard_html = '<div style="max-width: 900px; margin-bottom: 30px;">'
     for idx, t in enumerate(teams, 1):
-        if t['id']:
-            logo_url = f"https://a.espncdn.com/i/teamlogos/basketball/nba/500/scoreboard/{t['id']}.png"
-            logo_html = f'<img src="{logo_url}" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0;">'
+        if t['logo']:
+            logo_html = f'<img src="{t["logo"]}" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0;">'
         else:
             logo_html = ''
 
@@ -520,7 +524,9 @@ def main():
         render_moves_page("wnba", "🔄 WNBA Player Moves")
     elif st.session_state.page == "wnba_standings":
         render_standings_page("wnba", "📊 WNBA Leaderboard")
-    elif st.session_state.page in ["nba_news", "wnba_news", "nba_standings", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
+    elif st.session_state.page == "nba_standings":
+        render_standings_page("nba", "📊 NBA Leaderboard")
+    elif st.session_state.page in ["nba_news", "wnba_news", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
         render_under_construction()
 
 if __name__ == "__main__":
