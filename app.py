@@ -71,7 +71,6 @@ st.html(
             background-color: #13151a !important;
         }
         
-        /* Forces standard native cursor and completely hides toolbar overlays on images */
         [data-testid="stImage"] button, [data-testid="stSidebar"] button[title="View fullscreen"] {
             display: none !important;
         }
@@ -301,14 +300,15 @@ def query_huggingface_live(user_input):
         return f"Analytical feed connection offline. (Error: {str(e)})"
 
 def main():
-    st.sidebar.title("Stan's Sports Stats")
+    # Render the new main logo at the top of the sidebar
+    st.sidebar.image("s3logo.png", use_container_width=True)
     
     if not st.session_state.ai_mode:
-        # Replaced navigation entry trigger with markdown layout injecting your mini-avatar directly
+        # Mini-avatar row arrangement
         st.sidebar.markdown(
             '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">'
             '<img src="app/static/stan.png" style="width: 24px; height: 24px; border-radius: 4px;">'
-            '<span style="font-weight: 600; font-size: 14px; color: #f1f3f5;">Stan AI Live Module</span>'
+            '<span style="font-weight: 600; font-size: 14px; color: #f1f3f5;">Ask Stan (AI)</span>'
             '</div>',
             unsafe_allow_html=True
         )
@@ -345,14 +345,12 @@ def main():
             
         st.sidebar.divider()
         
-        # Displays main asset on sidebar chat panel with interactive controls entirely disabled
         st.sidebar.image(
             "stan.png", 
             use_container_width=True,
             output_format="PNG"
         )
         
-        # Header text tracking layout cleanly set
         st.sidebar.subheader("Ask Stan")
         st.sidebar.write("Ask Stan about any sports news:")
         
@@ -372,7 +370,6 @@ def main():
                     if role == "user":
                         st.markdown(f"👤 **You:** {text}")
                     else:
-                        # Replaced old little bot in chat row loops with your shrunk custom asset pointer
                         st.html(
                             f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
                             f'<img src="app/static/stan.png" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
