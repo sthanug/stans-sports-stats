@@ -4,6 +4,39 @@ from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
+# Custom Orange & Black Basketball Theme Injection
+st.html(
+    """
+    <style>
+        /* Sidebar styling */
+        [data-testid="stSidebar"] {
+            background-color: #0b0b0c !important;
+            border-right: 1px solid #222;
+        }
+        /* Primary button custom color overrides */
+        .stButton > button[kind="primary"] {
+            background-color: #ff5500 !important;
+            border-color: #ff5500 !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[kind="primary"]:hover {
+            background-color: #e04400 !important;
+            border-color: #e04400 !important;
+        }
+        /* Custom styled code metrics badges */
+        .sport-badge {
+            background: #161618;
+            border: 1px solid #ff5500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #ff5500;
+            font-family: monospace;
+            font-weight: bold;
+        }
+    </style>
+    """
+)
+
 if "page" not in st.session_state:
     st.session_state.page = "nba_player_moves"
 if "ai_mode" not in st.session_state:
@@ -36,6 +69,41 @@ def fetch_transactions(league):
         })
     return transactions
 
+@st.cache_data(ttl=1800)
+def fetch_live_wnba_standings():
+    url = "https://site.api.espn.com/apis/v2/sports/basketball/wnba/standings"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        teams_list = []
+        for group in data.get('children', []):
+            for entry in group.get('standings', {}).get('entries', []):
+                team_data = entry.get('team', {})
+                team_name = team_data.get('displayName', 'Unknown Team')
+                
+                stats = entry.get('stats', [])
+                records = [s for s in stats if s.get('type') == 'overall']
+                record_str = records[0].get('displayValue', '0-0') if records else '0-0'
+                
+                pct_vals = [s for s in stats if s.get('type') == 'winpercent']
+                pct = pct_vals[0].get('value', 0.0) if pct_vals else 0.0
+                
+                gb_vals = [s for s in stats if s.get('type') == 'gamesbehind']
+                gb = gb_vals[0].get('displayValue', '—') if gb_vals else '—'
+                
+                teams_list.append({
+                    "team": team_name,
+                    "record": record_str,
+                    "pct": f"{pct:.3f}" if pct else ".000",
+                    "gb": "—" if gb == "0" or gb == "0.0" else str(gb)
+                })
+        teams_list.sort(key=lambda x: float(x['pct']) if x['pct'] else 0.0, reverse=True)
+        return teams_list
+    except Exception:
+        return []
+
 def render_moves_page(league, title):
     st.title(title)
     transactions = fetch_transactions(league)
@@ -62,36 +130,22 @@ def render_wnba_standings():
     st.title("📊 WNBA Leaderboard")
     st.divider()
     
-    teams = [
-        {"rank": 1, "team": "Minnesota Lynx", "record": "15-4", "pct": ".789", "gb": "—"},
-        {"rank": 2, "team": "Las Vegas Aces", "record": "14-5", "pct": ".737", "gb": "1.0"},
-        {"rank": 3, "team": "Golden State Valkyries", "record": "13-7", "pct": ".650", "gb": "2.5"},
-        {"rank": 4, "team": "Atlanta Dream", "record": "12-7", "pct": ".632", "gb": "3.0"},
-        {"rank": 5, "team": "New York Liberty", "record": "12-8", "pct": ".600", "gb": "3.5"},
-        {"rank": 6, "team": "Dallas Wings", "record": "11-8", "pct": ".579", "gb": "4.0"},
-        {"rank": 7, "team": "Indiana Fever", "record": "11-8", "pct": ".579", "gb": "4.0"},
-        {"rank": 8, "team": "Washington Mystics", "record": "9-9", "pct": ".500", "gb": "5.5"},
-        {"rank": 9, "team": "Toronto Tempo", "record": "9-10", "pct": ".474", "gb": "6.0"},
-        {"rank": 10, "team": "Los Angeles Sparks", "record": "8-10", "pct": ".444", "gb": "6.5"},
-        {"rank": 11, "team": "Portland Fire", "record": "8-12", "pct": ".400", "gb": "7.5"},
-        {"rank": 12, "team": "Phoenix Mercury", "record": "7-13", "pct": ".350", "gb": "8.5"},
-        {"rank": 13, "team": "Chicago Sky", "record": "6-13", "pct": ".316", "gb": "9.0"},
-        {"rank": 14, "team": "Seattle Storm", "record": "5-15", "pct": ".250", "gb": "10.5"},
-        {"rank": 15, "team": "Connecticut Sun", "record": "4-15", "pct": ".211", "gb": "11.0"}
-    ]
+    teams = fetch_live_wnba_standings()
     
-    leaderboard_html = """
-    <div style="font-family: sans-serif; max-width: 800px; margin-bottom: 25px;">
-    """
-    for t in teams:
+    if not teams:
+        st.error("Hold up. Having trouble pulling data right now.")
+        return
+        
+    leaderboard_html = '<div style="font-family: sans-serif; max-width: 800px; margin-bottom: 25px;">'
+    for idx, t in enumerate(teams, 1):
         leaderboard_html += f"""
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #333; font-size: 14px;">
-            <div style="width: 50px; color: #888; font-weight: bold;">#{t['rank']}</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #222; font-size: 14px;">
+            <div style="width: 50px; color: #666; font-weight: bold;">#{idx}</div>
             <div style="flex-grow: 1; font-weight: bold; color: #fff;">{t['team']}</div>
-            <div style="color: #aaa; font-variant-numeric: tabular-nums;">
-                <span style="background: #222; padding: 2px 6px; border-radius: 4px; color: #ff9900;">{t['record']}</span>
-                <span style="margin-left: 15px;">PCT: <strong>{t['pct']}</strong></span>
-                <span style="margin-left: 15px;">GB: <strong>{t['gb']}</strong></span>
+            <div style="color: #aaa;">
+                <span class="sport-badge">{t['record']}</span>
+                <span style="margin-left: 15px;">PCT: <strong style="color:#fff;">{t['pct']}</strong></span>
+                <span style="margin-left: 15px;">GB: <strong style="color:#fff;">{t['gb']}</strong></span>
             </div>
         </div>
         """
@@ -103,55 +157,55 @@ def render_wnba_standings():
         """
         <div style="
             filter: grayscale(100%) blur(1.5px); 
-            opacity: 0.4; 
+            opacity: 0.3; 
             pointer-events: none; 
-            border: 1px solid #444; 
+            border: 1px solid #333; 
             padding: 20px; 
             border-radius: 8px;
-            background-color: #111;
+            background-color: #0c0c0d;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-family: sans-serif;
         ">
             <div style="display: flex; flex-direction: column; gap: 20px; width: 28%;">
-                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">MATCHUP 1</div>
-                    <div style="font-size: 14px; color: #fff;">#1 Lynx</div>
-                    <div style="font-size: 14px; color: #aaa;">#8 Mystics</div>
+                <div style="background: #161618; padding: 8px; border-radius: 4px; border-left: 4px solid #ff5500;">
+                    <div style="font-size: 11px; color: #666;">MATCHUP 1</div>
+                    <div style="font-size: 14px; color: #fff;">#1 Seed</div>
+                    <div style="font-size: 14px; color: #888;">#8 Seed</div>
                 </div>
-                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">MATCHUP 2</div>
-                    <div style="font-size: 14px; color: #fff;">#4 Dream</div>
-                    <div style="font-size: 14px; color: #aaa;">#5 Liberty</div>
+                <div style="background: #161618; padding: 8px; border-radius: 4px; border-left: 4px solid #ff5500;">
+                    <div style="font-size: 11px; color: #666;">MATCHUP 2</div>
+                    <div style="font-size: 14px; color: #fff;">#4 Seed</div>
+                    <div style="font-size: 14px; color: #888;">#5 Seed</div>
                 </div>
-                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">MATCHUP 3</div>
-                    <div style="font-size: 14px; color: #fff;">#2 Aces</div>
-                    <div style="font-size: 14px; color: #aaa;">#7 Fever</div>
+                <div style="background: #161618; padding: 8px; border-radius: 4px; border-left: 4px solid #ff5500;">
+                    <div style="font-size: 11px; color: #666;">MATCHUP 3</div>
+                    <div style="font-size: 14px; color: #fff;">#2 Seed</div>
+                    <div style="font-size: 14px; color: #888;">#7 Seed</div>
                 </div>
-                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">MATCHUP 4</div>
-                    <div style="font-size: 14px; color: #fff;">#3 Valkyries</div>
-                    <div style="font-size: 14px; color: #aaa;">#6 Wings</div>
+                <div style="background: #161618; padding: 8px; border-radius: 4px; border-left: 4px solid #ff5500;">
+                    <div style="font-size: 11px; color: #666;">MATCHUP 4</div>
+                    <div style="font-size: 14px; color: #fff;">#3 Seed</div>
+                    <div style="font-size: 14px; color: #888;">#6 Seed</div>
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 75px; width: 28%;">
-                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">SEMIFINALS 1</div>
-                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M1</div>
-                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M2</div>
+                <div style="background: #161618; padding: 8px; border-radius: 4px; border-left: 4px solid #ff5500;">
+                    <div style="font-size: 11px; color: #666;">SEMIFINALS 1</div>
+                    <div style="font-size: 14px; color: #555; font-style: italic;">Winner M1</div>
+                    <div style="font-size: 14px; color: #555; font-style: italic;">Winner M2</div>
                 </div>
-                <div style="background: #222; padding: 8px; border-radius: 4px; border-left: 4px solid #ff9900;">
-                    <div style="font-size: 11px; color: #888;">SEMIFINALS 2</div>
-                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M3</div>
-                    <div style="font-size: 14px; color: #666; font-style: italic;">Winner M4</div>
+                <div style="background: #161618; padding: 8px; border-radius: 4px; border-left: 4px solid #ff5500;">
+                    <div style="font-size: 11px; color: #666;">SEMIFINALS 2</div>
+                    <div style="font-size: 14px; color: #555; font-style: italic;">Winner M3</div>
+                    <div style="font-size: 14px; color: #555; font-style: italic;">Winner M4</div>
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; width: 28%; align-items: center;">
-                <div style="background: #333; padding: 12px; border-radius: 6px; border: 1px solid #ff9900; width: 100%; text-align: center;">
-                    <div style="font-size: 12px; color: #ff9900; font-weight: bold; letter-spacing: 1px;">WNBA FINALS</div>
-                    <div style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">TBD vs TBD</div>
+                <div style="background: #161618; padding: 12px; border-radius: 6px; border: 1px solid #ff5500; width: 100%; text-align: center;">
+                    <div style="font-size: 12px; color: #ff5500; font-weight: bold; letter-spacing: 1px;">FINALS</div>
+                    <div style="margin-top: 8px; font-size: 13px; color: #555; font-style: italic;">TBD vs TBD</div>
                 </div>
             </div>
         </div>
@@ -164,10 +218,10 @@ def query_huggingface_live(user_input):
         client = InferenceClient("meta-llama/Meta-Llama-3-8B-Instruct", token=token)
         
         system_instruction = (
-            "You are Stan, an enthusiastic sports analyst and commentator. "
-            "You help users understand complex sports rules, data trends, trades, and context. "
-            "Keep your tone analytical, sharp, and conversational. CRITICAL: Your response "
-            "MUST be extremely brief and no longer than 50 words total."
+            "You are Stan, an enthusiastic, unbiased sports analyst and commentator. "
+            "You help users understand sports regulations, statistical trends, and trade contexts across leagues. "
+            "Keep your tone sharp, analytical, yet friendly. CRITICAL: Your response MUST "
+            "be highly concise and under 50 words total."
         )
         
         messages = [{"role": "system", "content": system_instruction}]
@@ -183,7 +237,7 @@ def query_huggingface_live(user_input):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"Stan is adjusting his microphone. Make sure HF_TOKEN is configured in secrets. (Error: {str(e)})"
+        return f"Stan is adjusting his microphone. (Error: {str(e)})"
 
 def main():
     st.sidebar.title("Stan's Sports Stats")
@@ -216,33 +270,30 @@ def main():
                 if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
                     st.session_state.page = "wnba_pbp"
     else:
-        if st.sidebar.button("⬅️ Back to Sports Navigation", key="exit_ai_btn", use_container_width=True):
+        if st.sidebar.button("⬅️ Back to Navigation", key="exit_ai_btn", use_container_width=True):
             st.session_state.ai_mode = False
             st.rerun()
             
         st.sidebar.divider()
         
-        # Clean inline SVG flat vector design icon
         st.sidebar.html(
             """
-            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 0px 4px #ff9900);">
-                    <circle cx="12" cy="12" r="10" stroke="#ff9900" stroke-width="2"/>
-                    <path d="M12 2C12 2 15 6 15 12C15 18 12 22 12 22" stroke="#ff9900" stroke-width="1.5"/>
-                    <path d="M12 2C12 2 9 6 9 12C9 18 12 22 12 22" stroke="#ff9900" stroke-width="1.5"/>
-                    <path d="M2 12H22" stroke="#ff9900" stroke-width="1.5"/>
-                    <circle cx="12" cy="11" r="2" fill="#ffffff"/>
-                    <path d="M9 16C10 17.5 14 17.5 15 16" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+            <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#ff5500" stroke-width="2.5"/>
+                    <path d="M6 12H18M12 6V18" stroke="#ff5500" stroke-width="1.5" stroke-dasharray="2 2"/>
+                    <circle cx="12" cy="11" r="2.5" fill="#ffffff"/>
+                    <path d="M9.5 15.5C10.2 16.5 13.8 16.5 14.5 15.5" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
                 </svg>
             </div>
             """
         )
         
         st.sidebar.subheader("🤖 Ask Stan")
-        st.sidebar.write("Get insights on trades, statistics, or league contexts instantly:")
+        st.sidebar.write("Get insights on rules, historical player contexts, or cross-league trades:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
-            user_msg = st.text_input("Message Stan...", placeholder="Type your sports query here...")
+            user_msg = st.text_input("Message Stan...", placeholder="Type your multi-sport query...")
             submit_clicked = st.form_submit_button("Send Query", use_container_width=True)
             
         if submit_clicked and user_msg.strip():
@@ -253,14 +304,14 @@ def main():
         if st.session_state.chat_history:
             st.sidebar.divider()
             with st.sidebar.container():
-                for role, text in st.session_state.chat_history[-8:]:
+                for role, text in st.session_state.chat_history[-6:]:
                     if role == "user":
                         st.markdown(f"🙋‍♂️ **You:** {text}")
                     else:
                         st.markdown(f"🤖 **Stan:** {text}")
                     st.sidebar.divider()
 
-    # Routing
+    # Routing Engine
     if st.session_state.page == "nba_player_moves":
         render_moves_page("nba", "🔄 NBA Player Moves")
     elif st.session_state.page == "wnba_player_moves":
@@ -268,20 +319,15 @@ def main():
     elif st.session_state.page == "wnba_standings":
         render_wnba_standings()
     elif st.session_state.page == "nba_standings":
-        st.title("📊 NBA Standings")
-        st.info("🚧 NBA Standings coming soon.")
+        st.info("NBA Standings coming soon.")
     elif st.session_state.page == "nba_player_stats":
-        st.title("📈 NBA Player Stats")
-        st.info("🚧 NBA Statistics coming soon.")
+        st.info("NBA Statistics coming soon.")
     elif st.session_state.page == "wnba_player_stats":
-        st.title("📈 WNBA Player Stats")
-        st.info("🚧 WNBA Statistics coming soon.")
+        st.info("WNBA Statistics coming soon.")
     elif st.session_state.page == "nba_pbp":
-        st.title("⏱️ NBA Matches Play by Play")
-        st.info("🚧 NBA Play-by-Play coming soon.")
+        st.info("NBA Play-by-Play coming soon.")
     elif st.session_state.page == "wnba_pbp":
-        st.title("⏱️ WNBA Matches Play by Play")
-        st.info("🚧 WNBA Play-by-Play coming soon.")
+        st.info("WNBA Play-by-Play coming soon.")
 
 if __name__ == "__main__":
     main()
