@@ -6,6 +6,12 @@ from huggingface_hub import InferenceClient
 # Setting the page config with your custom favicon asset
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="s3favicon.png", layout="wide")
 
+# Add the exact team display names that are allowed to show their logos
+LOGO_ALLOWLIST = {
+    "New York Liberty",
+    "Indiana Fever"
+}
+
 # Convert the micro-icon asset into a safe inline base64 string
 def load_button_icon(path):
     try:
@@ -210,6 +216,7 @@ def fetch_live_wnba_standings():
             for entry in conference.get('standings', {}).get('entries', []):
                 team_info = entry.get('team', {})
                 team_name = team_info.get('displayName', 'Unknown Team')
+                team_id = team_info.get('id', '')
                 
                 if team_name not in official_wnba_teams:
                     continue
@@ -230,6 +237,7 @@ def fetch_live_wnba_standings():
                         win_pct = metric.get('value', win_pct)
                 
                 teams_list.append({
+                    "id": team_id,
                     "team": team_name,
                     "record": w_l_record,
                     "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct)
@@ -282,11 +290,21 @@ def render_wnba_standings():
         
     leaderboard_html = '<div style="max-width: 900px; margin-bottom: 30px;">'
     for idx, t in enumerate(teams, 1):
+        # Conditional Logic: If the team is in the allowlist, generate an HTML img string using the team ID
+        if t['team'] in LOGO_ALLOWLIST and t['id']:
+            logo_url = f"https://a.espncdn.com/i/teamlogos/basketball/nba/500/scoreboard/{t['id']}.png"
+            logo_html = f'<img src="{logo_url}" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0;">'
+        else:
+            logo_html = ''
+
         leaderboard_html += f"""
         <div class="table-row">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <span style="width: 24px; color: #ff5500; font-weight: 700;">{idx}</span>
-                <span style="font-weight: 600; color: #ffffff; font-size: 15px;">{t['team']}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {logo_html}
+                    <span style="font-weight: 600; color: #ffffff; font-size: 15px;">{t['team']}</span>
+                </div>
             </div>
             <div style="display: flex; align-items: center; gap: 24px;">
                 <span class="sport-badge">{t['record']}</span>
