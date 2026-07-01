@@ -86,46 +86,49 @@ def fetch_live_wnba_standings():
         data = response.json()
         
         teams_list = []
-        for group in data.get('children', []):
-            for entry in group.get('standings', {}).get('entries', []):
-                team_data = entry.get('team', {})
-                team_name = team_data.get('displayName', 'Unknown Team')
+        # ESPN API separates standings by conference structures inside 'children'
+        for conference in data.get('children', []):
+            for entry in conference.get('standings', {}).get('entries', []):
+                team_info = entry.get('team', {})
+                team_name = team_info.get('displayName', 'Unknown Team')
                 
+                # Filter check to guarantee accurate roster visibility
                 if team_name not in official_wnba_teams:
                     continue
                 
-                stats = entry.get('stats', [])
+                stats_array = entry.get('stats', [])
                 
-                # FIXED DATA PARSING LOOKUPS
-                record_str = "0-0"
-                pct = 0.0
-                gb = "—"
+                # Bulletproof fallback parameters
+                w_l_record = "0-0"
+                win_pct = 0.0
+                games_behind = "—"
                 
-                for s in stats:
-                    abbr = str(s.get('abbreviation', '')).upper()
-                    name = str(s.get('name', '')).lower()
+                for metric in stats_array:
+                    metric_type = str(metric.get('type', '')).lower()
+                    metric_name = str(metric.get('name', '')).lower()
+                    metric_abbr = str(metric.get('abbreviation', '')).upper()
                     
-                    # Target the win-loss record string safely
-                    if abbr in ['W-L', 'REC'] or name == 'record' or 'summary' in name:
-                        record_str = s.get('displayValue', record_str)
+                    # Extract overall win-loss breakdown records accurately
+                    if metric_type == 'overall' or metric_name == 'overall' or metric_abbr in ['W-L', 'REC']:
+                        w_l_record = metric.get('displayValue', w_l_record)
                     
-                    # Target true percentage value
-                    elif abbr == 'PCT' or 'percent' in name:
-                        pct = s.get('value', pct)
+                    # Extract precise mathematical win percentage split 
+                    elif metric_type == 'winpercent' or metric_name == 'winpercent' or metric_abbr == 'PCT':
+                        win_pct = metric.get('value', win_pct)
                         
-                    # Target games behind metric profile
-                    elif abbr == 'GB' or 'behind' in name:
-                        gb_val = s.get('displayValue', '—')
-                        gb = "—" if gb_val == "0" or gb_val == "0.0" else str(gb_val)
+                    # Extract structural division games behind distance margin
+                    elif metric_type == 'gamesbehind' or metric_name == 'gamesbehind' or metric_abbr == 'GB':
+                        gb_val = metric.get('displayValue', '—')
+                        games_behind = "—" if gb_val == "0" or gb_val == "0.0" else str(gb_val)
                 
                 teams_list.append({
                     "team": team_name,
-                    "record": record_str,
-                    "pct": f"{pct:.3f}" if isinstance(pct, (int, float)) and pct <= 1 else str(pct),
-                    "gb": gb
+                    "record": w_l_record,
+                    "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct),
+                    "gb": games_behind
                 })
         
-        # Sort sequentially by true win percentage math
+        # Sort values cleanly by active win percentage calculations
         teams_list.sort(key=lambda x: float(x['pct']) if x['pct'] != '0.0' else 0.0, reverse=True)
         return teams_list
     except Exception:
@@ -324,4 +327,38 @@ def main():
             user_msg = st.text_input("Message Stan...", placeholder="Type your multi-sport query...")
             submit_clicked = st.form_submit_button("Send Query", use_container_width=True)
             
-        if submit_clicked and
+        if submit_clicked and user_msg.strip():
+            ai_reply = query_huggingface_live(user_msg)
+            st.session_state.chat_history.append(("user", user_msg))
+            st.session_state.chat_history.append(("model", ai_reply))
+
+        if st.session_state.chat_history:
+            st.sidebar.divider()
+            with st.sidebar.container():
+                for role, text in st.session_state.chat_history[-6:]:
+                    if role == "user":
+                        st.markdown(f"🙋‍♂️ **You:** {text}")
+                    else:
+                        st.markdown(f"🤖 **Stan:** {text}")
+                    st.sidebar.divider()
+
+    # Routing Engine
+    if st.session_state.page == "nba_player_moves":
+        render_moves_page("nba", "🔄 NBA Player Moves")
+    elif st.session_state.page == "wnba_player_moves":
+        render_moves_page("wnba", "🔄 WNBA Player Moves")
+    elif st.session_state.page == "wnba_standings":
+        render_wnba_standings()
+    elif st.session_state.page == "nba_standings":
+        st.info("NBA Standings coming soon.")
+    elif st.session_state.page == "nba_player_stats":
+        st.info("NBA Statistics coming soon.")
+    elif st.session_state.page == "wnba_player_stats":
+        st.info("WNBA Statistics coming soon.")
+    elif st.session_state.page == "nba_pbp":
+        st.info("NBA Play-by-Play coming soon.")
+    elif st.session_state.page == "wnba_pbp":
+        st.info("WNBA Play-by-Play coming soon.")
+
+if __name__ == "__main__":
+    main()
