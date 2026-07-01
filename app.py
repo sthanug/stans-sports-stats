@@ -4,61 +4,71 @@ from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
-# Premium Aesthetic Minimalist Theme Injection
 st.html(
     """
     <style>
-        /* Base page background layout */
         .stApp {
-            background-color: #0d0e10 !important;
-            color: #e4e6eb !important;
+            background: radial-gradient(circle at 50% 10%, #16181d 0%, #0b0c0e 100%) !important;
+            color: #f1f3f5 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        /* Sidebar styling */
+        
         [data-testid="stSidebar"] {
-            background-color: #121316 !important;
-            border-right: 1px solid #1f2226;
+            background-color: #0f1013 !important;
+            border-right: 1px solid #1a1d24;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
         }
-        /* Custom styled league elements */
+        
         .sport-badge {
-            background: #1a1c23;
-            border: 1px solid #ff5500;
-            padding: 4px 10px;
-            border-radius: 6px;
+            background: rgba(255, 85, 0, 0.08);
+            border: 1px solid rgba(255, 85, 0, 0.4);
+            padding: 6px 14px;
+            border-radius: 4px;
             color: #ff5500;
-            font-family: 'SF Pro Display', -apple-system, sans-serif;
-            font-weight: 600;
+            font-family: "SF Mono", "Roboto Mono", monospace;
+            font-weight: 700;
+            font-size: 13px;
             letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(255, 85, 0, 0.1);
         }
-        /* Clean table row headers */
+        
         .table-row {
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 12px 16px; 
-            border-bottom: 1px solid #1f2226; 
-            font-size: 14px;
-            background-color: #121316;
-            margin-bottom: 4px;
-            border-radius: 6px;
-            transition: background 0.2s ease;
+            padding: 14px 20px; 
+            border: 1px solid #1a1d24;
+            background: linear-gradient(180deg, #13151a 0%, #0f1014 100%);
+            margin-bottom: 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .table-row:hover {
-            background-color: #181a20;
+            background: linear-gradient(180deg, #171a21 0%, #12141a 100%);
+            border-color: rgba(255, 85, 0, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }
-        /* Streamlit primary button overrides */
+        
         .stButton > button[kind="primary"] {
-            background-color: #ff5500 !important;
-            border-color: #ff5500 !important;
+            background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
+            border: none !important;
             color: #ffffff !important;
             border-radius: 6px !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
+            transition: all 0.2s ease !important;
         }
         .stButton > button[kind="primary"]:hover {
-            background-color: #e04400 !important;
-            border-color: #e04400 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(212, 61, 0, 0.45) !important;
         }
         .stButton > button {
             border-radius: 6px !important;
+            border-color: #262930 !important;
+            background-color: #13151a !important;
         }
     </style>
     """
@@ -282,7 +292,7 @@ def query_huggingface_live(user_input):
         response = client.chat_completion(
             messages=messages,
             max_tokens=100,
-            temperature=0.4 # Dropped temperature slightly for cleaner, more predictable responses
+            temperature=0.4
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -325,7 +335,6 @@ def main():
             
         st.sidebar.divider()
         
-        # Cleaner, professional flat geometric badge icon
         st.sidebar.html(
             """
             <div style="display: flex; justify-content: center; margin-bottom: 15px;">
@@ -339,11 +348,11 @@ def main():
         )
         
         st.sidebar.subheader("🤖 Ask Stan")
-        st.sidebar.write("Query cross-league data trends, transaction contexts, or cap regulations:")
+        st.sidebar.write("Ask Stan about any sports news:")
         
         with st.sidebar.form(key="chat_form", clear_on_submit=True):
-            user_msg = st.text_input("Message Stan...", placeholder="Enter tactical inquiry...")
-            submit_clicked = st.form_submit_button("Send Query", use_container_width=True)
+            user_msg = st.text_input("Message Stan...", placeholder="Type here...")
+            submit_clicked = st.form_submit_button("Send", use_container_width=True)
             
         if submit_clicked and user_msg.strip():
             ai_reply = query_huggingface_live(user_msg)
@@ -360,7 +369,6 @@ def main():
                         st.markdown(f"🤖 **Stan:** {text}")
                     st.sidebar.divider()
 
-    # Routing Engine
     if st.session_state.page == "nba_player_moves":
         render_moves_page("nba", "🔄 NBA Player Moves")
     elif st.session_state.page == "wnba_player_moves":
