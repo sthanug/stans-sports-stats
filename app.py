@@ -243,4 +243,211 @@ def fetch_live_standings(league):
                         "pct": f"{win_pct:.3f}" if isinstance(win_pct, (int, float)) and win_pct <= 1 else str(win_pct)
                     })
         
-        unique_teams = {v['team']: v for v in teams
+        unique_teams = {v['team']: v for v in teams_list}.values()
+        sorted_teams = sorted(unique_teams, key=lambda x: float(x['pct']) if x['pct'] != '0.0' else 0.0, reverse=True)
+        return list(sorted_teams)
+    except Exception:
+        return []
+
+def render_under_construction():
+    st.html(
+        """
+        <div class="orange-info-message">
+            <span>🚧 I'm still working on this page! 🚧</span>
+        </div>
+        """
+    )
+
+def render_moves_page(league, title):
+    st.title(title)
+    transactions = fetch_transactions(league)
+    if not transactions:
+        st.error("Roster feed currently unavailable.")
+        return
+
+    team_id_map = fetch_team_map(league)
+
+    search_query = st.text_input("🔍 Filter by team name:", "").strip().lower()
+    st.divider()
+
+    results_found = False
+    for tx in transactions:
+        if search_query in tx['Team'].lower():
+            results_found = True
+            
+            cleaned_team_name = tx['Team'].lower().strip()
+            matched_id = team_id_map.get(cleaned_team_name)
+            
+            if not matched_id:
+                for official_name, uid in team_id_map.items():
+                    if cleaned_team_name in official_name or official_name in cleaned_team_name:
+                        matched_id = uid
+                        break
+            
+            with st.container():
+                if matched_id:
+                    logo_url = f"https://a.espncdn.com/i/teamlogos/basketball/nba/500/scoreboard/{matched_id}.png"
+                    st.html(
+                        f"""
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <img src="{logo_url}" style="width: 32px; height: 32px; object-fit: contain;">
+                            <h3 style="margin: 0; color: #ff5500;">{tx['Team']}</h3>
+                        </div>
+                        """
+                    )
+                else:
+                    st.subheader(tx['Team'])
+                    
+                st.caption(f"🗓️ {tx['Date']}")
+                st.write(tx['Transaction'])
+                st.divider()
+    if not results_found:
+        st.info("No transaction records match your filters.")
+
+def render_standings_page(league, title):
+    st.title(title)
+    st.divider()
+    
+    teams = fetch_live_standings(league)
+    if not teams:
+        st.error("Leaderboard metrics currently unavailable.")
+        return
+        
+    leaderboard_html = '<div style="max-width: 900px; margin-bottom: 30px;">'
+    for idx, t in enumerate(teams, 1):
+        if t['id']:
+            logo_url = f"https://a.espncdn.com/i/teamlogos/basketball/nba/500/scoreboard/{t['id']}.png"
+            logo_html = f'<img src="{logo_url}" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0;">'
+        else:
+            logo_html = ''
+
+        leaderboard_html += f"""
+        <div class="table-row">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="width: 24px; color: #ff5500; font-weight: 700;">{idx}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {logo_html}
+                    <span style="font-weight: 600; color: #ffffff; font-size: 15px;">{t['team']}</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <span class="sport-badge">{t['record']}</span>
+                <span style="color: #888e96; min-width: 80px;">PCT: <strong style="color:#ff5500; font-family: monospace;">{t['pct']}</strong></span>
+            </div>
+        </div>
+        """
+    leaderboard_html += "</div>"
+    st.html(leaderboard_html)
+
+def query_huggingface_live(user_input):
+    try:
+        token = st.secrets["HF_TOKEN"]
+        client = InferenceClient("meta-llama/Meta-Llama-3-8B-Instruct", token=token)
+        
+        system_instruction = (
+            "You are Stan, a highly knowledgeable, tactical sports analyst. "
+            "Provide intelligent, deeply analytical context on sports regulations, "
+            "roster trends, and trade structures across professional sports. "
+            "Maintain a professional, objective, and expert tone. Avoid broadcaster-style hype, "
+            "exclamation marks, or generic sports catchphrases. Ensure exact precision with league names. "
+            "CRITICAL: Your total response must be highly concise, direct, and under 50 words total."
+        )
+        
+        messages = [{"role": "system", "content": system_instruction}]
+        for role, text in st.session_state.chat_history:
+            messages.append({"role": "user" if role == "user" else "assistant", "content": text})
+        
+        messages.append({"role": "user", "content": user_input})
+        
+        response = client.chat_completion(
+            messages=messages,
+            max_tokens=100,
+            temperature=0.4
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Analytical feed connection offline. (Error: {str(e)})"
+
+def main():
+    st.sidebar.image("s3logo.png", use_container_width=True)
+    
+    if not st.session_state.ai_mode:
+        if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
+            st.session_state.ai_mode = True
+            st.rerun()
+            
+        st.sidebar.divider()
+        
+        with st.sidebar.expander("🏀 Basketball", expanded=True):
+            with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
+                if st.button("📰 News", key="nba_news_btn", use_container_width=True):
+                    st.session_state.page = "nba_news"
+                if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
+                    st.session_state.page = "nba_player_moves"
+                if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
+                    st.session_state.page = "nba_player_stats"
+                if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
+                    st.session_state.page = "nba_pbp"
+                    
+            with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
+                if st.button("📰 News", key="wnba_news_btn", use_container_width=True):
+                    st.session_state.page = "wnba_news"
+                if st.button("📊 Standings", key="wnba_standings_btn", use_container_width=True):
+                    st.session_state.page = "wnba_standings"
+                if st.button("🔄 Player Moves", key="wnba_moves_btn", use_container_width=True):
+                    st.session_state.page = "wnba_player_moves"
+                if st.button("📈 Player Stats", key="wnba_stats_btn", use_container_width=True):
+                    st.session_state.page = "wnba_player_stats"
+                if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
+                    st.session_state.page = "wnba_pbp"
+    else:
+        if st.sidebar.button("⬅️ Back to Navigation", key="exit_ai_btn", use_container_width=True):
+            st.session_state.ai_mode = False
+            st.rerun()
+            
+        st.sidebar.divider()
+        
+        st.sidebar.image(
+            "stan.png", 
+            use_container_width=True,
+            output_format="PNG"
+        )
+        
+        st.sidebar.subheader("Ask Stan")
+        st.sidebar.write("Ask Stan about any sports news:")
+        
+        with st.sidebar.form(key="chat_form", clear_on_submit=True):
+            user_msg = st.text_input("Message Stan...", placeholder="Type here...")
+            submit_clicked = st.form_submit_button("Send", use_container_width=True)
+            
+        if submit_clicked and user_msg.strip():
+            ai_reply = query_huggingface_live(user_msg)
+            st.session_state.chat_history.append(("user", user_msg))
+            st.session_state.chat_history.append(("model", ai_reply))
+
+        if st.session_state.chat_history:
+            st.sidebar.divider()
+            with st.sidebar.container():
+                for role, text in st.session_state.chat_history[-6:]:
+                    if role == "user":
+                        st.markdown(f"👤 **You:** {text}")
+                    else:
+                        st.html(
+                            f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
+                            f'<img src="data:image/png;base64,{icon_b64}" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
+                            f'<div><strong style="color:#ff5500;">Stan:</strong> {text}</div>'
+                            f'</div>'
+                        )
+                    st.sidebar.divider()
+
+    if st.session_state.page == "nba_player_moves":
+        render_moves_page("nba", "🔄 NBA Player Moves")
+    elif st.session_state.page == "wnba_player_moves":
+        render_moves_page("wnba", "🔄 WNBA Player Moves")
+    elif st.session_state.page == "wnba_standings":
+        render_standings_page("wnba", "📊 WNBA Leaderboard")
+    elif st.session_state.page in ["nba_news", "wnba_news", "nba_player_stats", "wnba_player_stats", "nba_pbp", "wnba_pbp"]:
+        render_under_construction()
+
+if __name__ == "__main__":
+    main()
