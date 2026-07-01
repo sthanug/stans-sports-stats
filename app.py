@@ -335,17 +335,9 @@ def main():
             
         st.sidebar.divider()
         
-        st.sidebar.html(
-            """
-            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="24" height="24" rx="8" fill="#13151a" stroke="#1a1d24" stroke-width="1.5"/>
-                    <path d="M6 17L10.5 11.5L14 14.5L18.5 7" stroke="#ff5500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="18.5" cy="7" r="1.5" fill="#ffffff"/>
-                    <path d="M5 6V18H19" stroke="#3a3f47" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-            </div>
-            """
+        st.sidebar.image(
+            "stan.png", 
+            use_container_width=True
         )
         
         st.sidebar.subheader("🤖 Ask Stan")
@@ -367,7 +359,7 @@ def main():
                     if role == "user":
                         st.markdown(f"👤 **You:** {text}")
                     else:
-                        st.markdown(f"🤖 **Stan:** {text}")
+                        st.markdown(f"🎙️ **Stan:** {text}")
                     st.sidebar.divider()
 
     if st.session_state.page == "nba_player_moves":
@@ -385,7 +377,4 @@ def main():
     elif st.session_state.page == "nba_pbp":
         st.info("NBA Play-by-Play feed currently offline.")
     elif st.session_state.page == "wnba_pbp":
-        st.info("WNBA Play-by-Play feed currently offline.")
-
-if __name__ == "__main__":
-    main()
+        st.info("WNBA Play-by-Play feed currently
