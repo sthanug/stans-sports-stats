@@ -5,7 +5,7 @@ from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Stan's Sports Stats", page_icon="🏀", layout="wide")
 
-# Safe conversion of the micro-icon asset into an un-fullscreenable base64 inline string
+# Convert the micro-icon asset into an un-fullscreenable base64 inline string string safely
 def load_button_icon(path):
     try:
         with open(path, "rb") as f:
@@ -62,7 +62,7 @@ st.html(
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }}
         
-        /* Formats the icon natively directly inside the button container boundaries */
+        /* Flex alignment specifications to absolutely center button content elements */
         div.stButton > button[kind="primary"] {{
             background: linear-gradient(135deg, #ff6611 0%, #d43d00 100%) !important;
             border: none !important;
@@ -72,10 +72,11 @@ st.html(
             letter-spacing: 0.3px;
             box-shadow: 0 4px 12px rgba(212, 61, 0, 0.3) !important;
             transition: all 0.2s ease !important;
-            display: inline-flex !important;
+            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 10px !important;
+            text-align: center !important;
         }}
         div.stButton > button[kind="primary"]::before {{
             content: "";
@@ -86,6 +87,7 @@ st.html(
             width: 20px;
             height: 20px;
             display: inline-block;
+            flex-shrink: 0;
         }}
         div.stButton > button[kind="primary"]:hover {{
             transform: translateY(-1px);
@@ -97,7 +99,7 @@ st.html(
             background-color: #13151a !important;
         }}
         
-        /* Strict CSS overrides to strip out interactive layers and fullscreen hover tools */
+        /* Strict global rules targeting and completely hiding fullscreen utilities and overlays */
         button[title="View fullscreen"], 
         [data-testid="stImage"] button, 
         .stImage button,
@@ -254,172 +256,4 @@ def render_wnba_standings():
             filter: grayscale(100%); 
             opacity: 0.2; 
             pointer-events: none; 
-            border: 1px solid #22252a; 
-            padding: 24px; 
-            border-radius: 8px;
-            background-color: #121316;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: -apple-system, sans-serif;
-        ">
-            <div style="display: flex; flex-direction: column; gap: 16px; width: 28%;">
-                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 1</div>
-                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#1 Seed</div>
-                    <div style="font-size: 13px; color: #888e96;">#8 Seed</div>
-                </div>
-                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 2</div>
-                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#4 Seed</div>
-                    <div style="font-size: 13px; color: #888e96;">#5 Seed</div>
-                </div>
-                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 3</div>
-                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#2 Seed</div>
-                    <div style="font-size: 13px; color: #888e96;">#7 Seed</div>
-                </div>
-                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">MATCHUP 4</div>
-                    <div style="font-size: 13px; color: #fff; font-weight: 600; margin-top: 2px;">#3 Seed</div>
-                    <div style="font-size: 13px; color: #888e96;">#6 Seed</div>
-                </div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 68px; width: 28%;">
-                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">SEMIFINALS 1</div>
-                    <div style="font-size: 13px; color: #444; font-style: italic; margin-top: 2px;">TBD</div>
-                </div>
-                <div style="background: #1c1d22; padding: 10px; border-radius: 6px; border-left: 3px solid #ff5500;">
-                    <div style="font-size: 10px; color: #53565a; font-weight: 700;">SEMIFINALS 2</div>
-                    <div style="font-size: 13px; color: #444; font-style: italic; margin-top: 2px;">TBD</div>
-                </div>
-            </div>
-            <div style="display: flex; flex-direction: column; width: 28%; align-items: center;">
-                <div style="background: #1c1d22; padding: 16px; border-radius: 6px; border: 1px solid #ff5500; width: 100%; text-align: center;">
-                    <div style="font-size: 11px; color: #ff5500; font-weight: 700; letter-spacing: 1px;">FINALS</div>
-                    <div style="margin-top: 6px; font-size: 13px; color: #444; font-style: italic;">TBD</div>
-                </div>
-            </div>
-        </div>
-        """
-    )
-
-def query_huggingface_live(user_input):
-    try:
-        token = st.secrets["HF_TOKEN"]
-        client = InferenceClient("meta-llama/Meta-Llama-3-8B-Instruct", token=token)
-        
-        system_instruction = (
-            "You are Stan, a highly knowledgeable, tactical sports analyst. "
-            "Provide intelligent, deeply analytical context on sports regulations, "
-            "roster trends, and trade structures across professional sports. "
-            "Maintain a professional, objective, and expert tone. Avoid broadcaster-style hype, "
-            "exclamation marks, or generic sports catchphrases. Ensure exact precision with league names. "
-            "CRITICAL: Your total response must be highly concise, direct, and under 50 words total."
-        )
-        
-        messages = [{"role": "system", "content": system_instruction}]
-        for role, text in st.session_state.chat_history:
-            messages.append({"role": "user" if role == "user" else "assistant", "content": text})
-        
-        messages.append({"role": "user", "content": user_input})
-        
-        response = client.chat_completion(
-            messages=messages,
-            max_tokens=100,
-            temperature=0.4
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Analytical feed connection offline. (Error: {str(e)})"
-
-def main():
-    st.sidebar.image("s3logo.png", use_container_width=True)
-    
-    if not st.session_state.ai_mode:
-        if st.sidebar.button("Ask Stan (AI)", key="enter_ai_btn", use_container_width=True, type="primary"):
-            st.session_state.ai_mode = True
-            st.rerun()
-            
-        st.sidebar.divider()
-        
-        with st.sidebar.expander("🏀 Basketball", expanded=True):
-            with st.expander("🇺🇸 NBA", expanded=st.session_state.page.startswith("nba_")):
-                if st.button("📊 Standings", key="nba_standings_btn", use_container_width=True):
-                    st.session_state.page = "nba_standings"
-                if st.button("🔄 Player Moves", key="nba_moves_btn", use_container_width=True):
-                    st.session_state.page = "nba_player_moves"
-                if st.button("📈 Player Stats", key="nba_stats_btn", use_container_width=True):
-                    st.session_state.page = "nba_player_stats"
-                if st.button("⏱️ Matches Play by Play", key="nba_pbp_btn", use_container_width=True):
-                    st.session_state.page = "nba_pbp"
-                    
-            with st.expander("👩 WNBA", expanded=st.session_state.page.startswith("wnba_")):
-                if st.button("📊 Standings", key="wnba_standings_btn", use_container_width=True):
-                    st.session_state.page = "wnba_standings"
-                if st.button("🔄 Player Moves", key="wnba_moves_btn", use_container_width=True):
-                    st.session_state.page = "wnba_player_moves"
-                if st.button("📈 Player Stats", key="wnba_stats_btn", use_container_width=True):
-                    st.session_state.page = "wnba_player_stats"
-                if st.button("⏱️ Matches Play by Play", key="wnba_pbp_btn", use_container_width=True):
-                    st.session_state.page = "wnba_pbp"
-    else:
-        if st.sidebar.button("⬅️ Back to Navigation", key="exit_ai_btn", use_container_width=True):
-            st.session_state.ai_mode = False
-            st.rerun()
-            
-        st.sidebar.divider()
-        
-        st.sidebar.image(
-            "stan.png", 
-            use_container_width=True,
-            output_format="PNG"
-        )
-        
-        st.sidebar.subheader("Ask Stan")
-        st.sidebar.write("Ask Stan about any sports news:")
-        
-        with st.sidebar.form(key="chat_form", clear_on_submit=True):
-            user_msg = st.text_input("Message Stan...", placeholder="Type here...")
-            submit_clicked = st.form_submit_button("Send", use_container_width=True)
-            
-        if submit_clicked and user_msg.strip():
-            ai_reply = query_huggingface_live(user_msg)
-            st.session_state.chat_history.append(("user", user_msg))
-            st.session_state.chat_history.append(("model", ai_reply))
-
-        if st.session_state.chat_history:
-            st.sidebar.divider()
-            with st.sidebar.container():
-                for role, text in st.session_state.chat_history[-6:]:
-                    if role == "user":
-                        st.markdown(f"👤 **You:** {text}")
-                    else:
-                        st.html(
-                            f'<div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px;">'
-                            f'<img src="data:image/png;base64,{icon_b64}" style="width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 2px;">'
-                            f'<div><strong>Stan:</strong> {text}</div>'
-                            f'</div>'
-                        )
-                    st.sidebar.divider()
-
-    if st.session_state.page == "nba_player_moves":
-        render_moves_page("nba", "🔄 NBA Player Moves")
-    elif st.session_state.page == "wnba_player_moves":
-        render_moves_page("wnba", "🔄 WNBA Player Moves")
-    elif st.session_state.page == "wnba_standings":
-        render_wnba_standings()
-    elif st.session_state.page == "nba_standings":
-        st.info("NBA Standings database currently offline.")
-    elif st.session_state.page == "nba_player_stats":
-        st.info("NBA Statistics records currently offline.")
-    elif st.session_state.page == "wnba_player_stats":
-        st.info("WNBA Statistics records currently offline.")
-    elif st.session_state.page == "nba_pbp":
-        st.info("NBA Play-by-Play feed currently offline.")
-    elif st.session_state.page == "wnba_pbp":
-        st.info("WNBA Play-by-Play feed currently offline.")
-
-if __name__ == "__main__":
-    main()
+            border: 1
